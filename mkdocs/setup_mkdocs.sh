@@ -2,66 +2,73 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+IMAGE_NAME="mkdocs-flockfinder"
 
-create_venv() {
-    echo "Creating Python virtual environment..."
-    python3 -m venv .venv
+build_docker() {
+    echo "Building Docker image..."
+    docker build -t "$IMAGE_NAME" "$SCRIPT_DIR"
 }
 
-activate_venv() {
-    echo "Activating virtual environment..."
-    source .venv/bin/activate
+build_site() {
+    echo "Building MkDocs site..."
+    docker run --rm -v "$SCRIPT_DIR/site:/home/docsuser/docs/site" "$IMAGE_NAME" mkdocs build
 }
 
-upgrade_pip() {
-    echo "Upgrading pip..."
-    pip install --upgrade pip
+publish() {
+    echo "Publishing to gh-pages..."
+    cd "$REPO_DIR"
+    git add -f mkdocs/site
+    git commit -m "Build mkdocs site" || echo "No changes to commit"
+    git push origin "$(git subtree split --prefix mkdocs/site)":gh-pages --force
+    echo "Published to gh-pages!"
 }
 
-install_dependencies() {
-    echo "Installing MkDocs and plugins..."
-    pip install \
-        "mkdocs>=1.5" \
-        "mkdocs-material==9.6.2" \
-        "pymdown-extensions[extra]==10.14.3" \
-        "mkdocs-awesome-pages-plugin"
-}
-
-generate_requirements() {
-    echo "Generating requirements.txt..."
-    pip freeze > requirements.txt
+serve() {
+    echo "Starting local dev server at http://localhost:8000..."
+    docker run --rm -it -p 8000:8000 -v "$SCRIPT_DIR:/home/docsuser/docs" "$IMAGE_NAME"
 }
 
 print_usage() {
     cat <<EOF
+Usage: $0 [command]
 
-Setup complete!
+Commands:
+    build       Build Docker image and MkDocs site
+    publish     Build and publish to GitHub Pages
+    serve       Start local development server
+    help        Show this help message
 
-To start the MkDocs server:
-    cd $SCRIPT_DIR
-    source .venv/bin/activate
-    mkdocs serve
-
-Then open http://127.0.0.1:8000 in your browser
-
-To build static site:
-    mkdocs build
-
-To deploy to GitHub Pages:
-    mkdocs gh-deploy --force
-
+If no command is given, 'publish' is run by default.
 EOF
 }
 
 main() {
-    echo "Setting up MkDocs for FlockFinder documentation..."
     cd "$SCRIPT_DIR"
-    create_venv
-    activate_venv
-    upgrade_pip
-    install_dependencies
-    generate_requirements
-    print_usage
+    
+    case "${1:-publish}" in
+        build)
+            build_docker
+            build_site
+            ;;
+        publish)
+            build_docker
+            build_site
+            publish
+            ;;
+        serve)
+            build_docker
+            serve
+            ;;
+        help|--help|-h)
+            print_usage
+            ;;
+        *)
+            echo "Unknown command: $1"
+            print_usage
+            exit 1
+            ;;
+    esac
 }
 
 main "$@"
