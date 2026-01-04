@@ -12,6 +12,7 @@ nav:
     - Building: building.md
     - Permissions: permissions.md
   - User Guide:
+    - App Walkthrough: user-guide.md
     - Detection Types: detection-types.md
     - Data Export: data-export.md
     - iCloud Setup: icloud-setup.md
