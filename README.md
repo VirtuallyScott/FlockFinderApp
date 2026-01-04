@@ -2,6 +2,10 @@
 
 A companion iOS application for the FlockFinder ESP32-S3 surveillance camera detection system.
 
+## Firmware
+
+This app is configured to work with [oui-spy](https://github.com/VirtuallyScott/oui-spy), a fork of the original flock-you project.
+
 ## Features
 
 - **BLE Connectivity**: Connects to your FeatherS3 FlockFinder device via Bluetooth Low Energy
@@ -87,11 +91,13 @@ The ESP32 firmware has been updated to include BLE GATT server functionality:
 - Automatically broadcasts detections to connected iOS app
 - Continues normal WiFi/BLE scanning for surveillance cameras
 
-To flash the updated firmware:
+To flash the updated firmware from [oui-spy](https://github.com/VirtuallyScott/oui-spy):
 ```bash
-cd /Users/scottsmith/tmp/flock
+git clone https://github.com/VirtuallyScott/oui-spy.git
+cd oui-spy
+python3 -m venv .venv
 source .venv/bin/activate
-cd flock-you
+pip install platformio
 pio run -e um_feathers3 -t upload
 ```
 

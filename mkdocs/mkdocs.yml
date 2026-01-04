@@ -1,0 +1,91 @@
+site_name: FlockFinder iOS Documentation
+site_url: https://VirtuallyScott.github.io/FlockFinderApp/
+site_description: Documentation for the FlockFinder iOS surveillance camera detection app
+site_author: VirtuallyScott
+repo_url: https://github.com/VirtuallyScott/FlockFinderApp
+repo_name: VirtuallyScott/FlockFinderApp
+use_directory_urls: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Building: building.md
+    - Permissions: permissions.md
+  - User Guide:
+    - Detection Types: detection-types.md
+    - Data Export: data-export.md
+    - iCloud Setup: icloud-setup.md
+  - Technical:
+    - Architecture: architecture.md
+    - BLE Protocol: ble-protocol.md
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: red
+      accent: orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: red
+      accent: orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - awesome-pages
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/VirtuallyScott/FlockFinderApp
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.details
+  - pymdownx.arithmatex:
+      generic: true
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
