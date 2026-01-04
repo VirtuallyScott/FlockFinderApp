@@ -7,7 +7,7 @@
 A companion iOS application for the **FlockFinder ESP32-S3** surveillance camera detection system. This app connects to your FlockFinder hardware device via Bluetooth Low Energy (BLE) and provides real-time detection alerts, GPS logging, and comprehensive detection history.
 
 !!! info "Firmware"
-    This app is configured to work with [oui-spy](https://github.com/VirtuallyScott/oui-spy), a fork of the original flock-you project with enhanced BLE support.
+    This app is configured to work with [flock-you](https://github.com/VirtuallyScott/flock-you), a fork of the original flock-you project with BLE GATT server support.
 
 ## What is FlockFinder?
 

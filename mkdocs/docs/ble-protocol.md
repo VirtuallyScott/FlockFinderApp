@@ -3,7 +3,7 @@
 The FlockFinder iOS app communicates with the ESP32-S3 device using Bluetooth Low Energy (BLE) GATT protocol. This document describes the communication protocol in detail.
 
 !!! note "Firmware Compatibility"
-    This app is designed to work with [oui-spy](https://github.com/VirtuallyScott/oui-spy), a fork of flock-you with BLE GATT server support.
+    This app is designed to work with [flock-you](https://github.com/VirtuallyScott/flock-you), a fork with BLE GATT server support.
 
 ## Service & Characteristics
 
