@@ -53,6 +53,7 @@ Thumbs.db
 .venv/
 __pycache__/
 dist/
+site/
 venv/
 
 # Swift Package Manager

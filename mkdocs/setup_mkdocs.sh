@@ -21,10 +21,10 @@ upgrade_pip() {
 install_dependencies() {
     echo "Installing MkDocs and plugins..."
     pip install \
-        mkdocs>=1.5 \
-        mkdocs-material==9.6.2 \
+        "mkdocs>=1.5" \
+        "mkdocs-material==9.6.2" \
         "pymdown-extensions[extra]==10.14.3" \
-        mkdocs-awesome-pages-plugin
+        "mkdocs-awesome-pages-plugin"
 }
 
 generate_requirements() {
