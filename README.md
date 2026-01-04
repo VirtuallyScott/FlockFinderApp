@@ -2,6 +2,8 @@
 
 A companion iOS application for the FlockFinder ESP32-S3 surveillance camera detection system.
 
+**[Full Documentation](https://virtuallyscott.github.io/FlockFinderApp/)**
+
 ## Firmware
 
 This app is configured to work with [oui-spy](https://github.com/VirtuallyScott/oui-spy), a fork of the original flock-you project.
