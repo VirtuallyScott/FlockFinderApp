@@ -125,21 +125,44 @@ class ConfigurationManager: ObservableObject {
         pattern.isEnabled.toggle()
     }
     
+    // MARK: - Scan Mode Management
+    
+    /// Enables or disables WiFi scanning
+    func setWifiScanEnabled(_ enabled: Bool) {
+        currentConfiguration.wifiScanEnabled = enabled
+        isSynced = false
+    }
+    
+    /// Enables or disables BLE scanning
+    func setBleScanEnabled(_ enabled: Bool) {
+        currentConfiguration.bleScanEnabled = enabled
+        isSynced = false
+    }
+    
+    /// Sets the stream mode (all devices or matches only)
+    func setStreamMode(_ mode: StreamMode) {
+        currentConfiguration.streamMode = mode
+        isSynced = false
+    }
+    
     // MARK: - Scan Interval Management
     
     /// Updates WiFi scan interval (in milliseconds)
     func setWifiScanInterval(_ interval: Int) {
         currentConfiguration.wifiScanInterval = max(1000, min(60000, interval))
+        isSynced = false
     }
     
     /// Updates BLE scan interval (in milliseconds)
     func setBleScanInterval(_ interval: Int) {
         currentConfiguration.bleScanInterval = max(1000, min(60000, interval))
+        isSynced = false
     }
     
     /// Updates channel hop interval (in milliseconds)
     func setChannelHopInterval(_ interval: Int) {
         currentConfiguration.channelHopInterval = max(100, min(5000, interval))
+        isSynced = false
     }
     
     // MARK: - ESP32 Synchronization

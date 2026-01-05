@@ -36,11 +36,30 @@ struct DetectionPattern: Codable, Identifiable, Hashable {
     }
 }
 
+// MARK: - Stream Mode
+/// Controls what data is streamed from the ESP32
+enum StreamMode: Int, Codable, CaseIterable {
+    case all = 0            // Stream all detected devices
+    case matchesOnly = 1    // Stream only devices matching patterns
+    
+    var description: String {
+        switch self {
+        case .all: return "All Devices"
+        case .matchesOnly: return "Matches Only"
+        }
+    }
+}
+
 // MARK: - Scan Configuration
 /// Configuration for the ESP32 scanner, matching the ConfigManager structure
 struct ScanConfiguration: Codable {
     // Version for compatibility checking
     var version: Int = 1
+    
+    // Scan mode toggles
+    var wifiScanEnabled: Bool
+    var bleScanEnabled: Bool
+    var streamMode: StreamMode
     
     // Scan intervals (in milliseconds)
     var wifiScanInterval: Int
@@ -55,6 +74,9 @@ struct ScanConfiguration: Codable {
     
     enum CodingKeys: String, CodingKey {
         case version = "v"
+        case wifiScanEnabled = "wifi_en"
+        case bleScanEnabled = "ble_en"
+        case streamMode = "stream"
         case wifiScanInterval = "wsi"
         case bleScanInterval = "bsi"
         case channelHopInterval = "chi"
@@ -68,6 +90,9 @@ struct ScanConfiguration: Codable {
     static func createDefault() -> ScanConfiguration {
         return ScanConfiguration(
             version: 1,
+            wifiScanEnabled: true,
+            bleScanEnabled: true,
+            streamMode: .all,
             wifiScanInterval: 5000,
             bleScanInterval: 3000,
             channelHopInterval: 500,

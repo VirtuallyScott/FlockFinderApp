@@ -40,6 +40,24 @@ struct ConfigurationView: View {
                     scannedDevicesSection
                 }
                 
+                // Scan Mode Toggles Section
+                Section {
+                    scanModeToggles
+                } header: {
+                    Text("Scan Modes")
+                } footer: {
+                    Text("Enable or disable WiFi and BLE scanning. Note: ESP32 only supports 2.4GHz WiFi (channels 1-14).")
+                }
+                
+                // Stream Mode Section
+                Section {
+                    streamModeControl
+                } header: {
+                    Text("Debug Stream")
+                } footer: {
+                    Text("Control what data is streamed to the debug view. 'All Devices' shows everything the scanner sees. 'Matches Only' shows only devices matching your alert patterns.")
+                }
+                
                 // Scan Intervals Section
                 Section {
                     scanIntervalControls
@@ -258,6 +276,64 @@ struct ConfigurationView: View {
                 )
             }
         }
+    }
+    
+    // MARK: - Scan Mode Toggles
+    
+    private var scanModeToggles: some View {
+        Group {
+            Toggle(isOn: Binding(
+                get: { configManager.currentConfiguration.wifiScanEnabled },
+                set: { configManager.setWifiScanEnabled($0) }
+            )) {
+                Label {
+                    VStack(alignment: .leading) {
+                        Text("WiFi Scanning")
+                        Text("2.4GHz only (channels 1-14)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } icon: {
+                    Image(systemName: "wifi")
+                        .foregroundColor(.blue)
+                }
+            }
+            
+            Toggle(isOn: Binding(
+                get: { configManager.currentConfiguration.bleScanEnabled },
+                set: { configManager.setBleScanEnabled($0) }
+            )) {
+                Label {
+                    VStack(alignment: .leading) {
+                        Text("BLE Scanning")
+                        Text("Bluetooth Low Energy devices")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } icon: {
+                    Image(systemName: "antenna.radiowaves.left.and.right")
+                        .foregroundColor(.green)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Stream Mode Control
+    
+    private var streamModeControl: some View {
+        Picker("Stream Mode", selection: Binding(
+            get: { configManager.currentConfiguration.streamMode },
+            set: { configManager.setStreamMode($0) }
+        )) {
+            ForEach(StreamMode.allCases, id: \.self) { mode in
+                HStack {
+                    Image(systemName: mode == .all ? "list.bullet" : "target")
+                    Text(mode.description)
+                }
+                .tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
     }
     
     // MARK: - Pattern Section
