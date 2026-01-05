@@ -35,6 +35,11 @@ struct ConfigurationView: View {
                     Text("ESP32 Sync Status")
                 }
                 
+                // Scanned Devices Section - shows what ESP32 is seeing
+                if bleManager.isConnected && hasScannedDevices {
+                    scannedDevicesSection
+                }
+                
                 // Scan Intervals Section
                 Section {
                     scanIntervalControls
@@ -75,6 +80,79 @@ struct ConfigurationView: View {
             .onAppear {
                 setupBLECallbacks()
             }
+        }
+    }
+    
+    // MARK: - Scanned Devices Section
+    
+    private var scannedDevicesSection: some View {
+        Section {
+            HStack {
+                Label {
+                    VStack(alignment: .leading) {
+                        Text("WiFi Devices")
+                        Text("\(bleManager.scannedWiFiDevices.count) discovered")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } icon: {
+                    Image(systemName: "wifi")
+                        .foregroundColor(.blue)
+                }
+                
+                Spacer()
+                
+                if !bleManager.scannedWiFiDevices.isEmpty {
+                    Button {
+                        selectedPatternType = .mac
+                        showingAddPattern = true
+                    } label: {
+                        Text("Add")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+            
+            HStack {
+                Label {
+                    VStack(alignment: .leading) {
+                        Text("BLE Devices")
+                        Text("\(bleManager.scannedBLEDevices.count) discovered")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } icon: {
+                    Image(systemName: "antenna.radiowaves.left.and.right")
+                        .foregroundColor(.green)
+                }
+                
+                Spacer()
+                
+                if !bleManager.scannedBLEDevices.isEmpty {
+                    Button {
+                        selectedPatternType = .mac
+                        showingAddPattern = true
+                    } label: {
+                        Text("Add")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+        } header: {
+            HStack {
+                Text("Live Scanned Devices")
+                Spacer()
+                Button {
+                    bleManager.clearScannedDevices()
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.caption)
+                }
+            }
+        } footer: {
+            Text("Devices currently being detected by the ESP32. Tap 'Add' to create alert patterns from these devices.")
         }
     }
     
@@ -270,10 +348,29 @@ struct ConfigurationView: View {
                     }
                 }
                 
-                TextField("Pattern", text: $newPattern)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .font(.system(.body, design: .monospaced))
+                // Show device picker for MAC addresses if we have scanned devices
+                if selectedPatternType == .mac && hasScannedDevices {
+                    scannedDevicePicker
+                }
+                
+                // Show SSID picker if we have WiFi devices with SSIDs
+                if selectedPatternType == .ssid && hasScannedSSIDs {
+                    scannedSSIDPicker
+                }
+                
+                // Show BLE name picker if we have BLE devices with names
+                if selectedPatternType == .bleName && hasScannedBLENames {
+                    scannedBLENamePicker
+                }
+                
+                Section {
+                    TextField("Pattern (or enter manually)", text: $newPattern)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .font(.system(.body, design: .monospaced))
+                } header: {
+                    Text("Manual Entry")
+                }
                 
                 Picker("Device Type", selection: $newDeviceType) {
                     ForEach(SurveillanceDeviceType.allCases, id: \.rawValue) { device in
@@ -307,6 +404,142 @@ struct ConfigurationView: View {
                     .disabled(newPattern.isEmpty)
                 }
             }
+        }
+    }
+    
+    // MARK: - Scanned Device Pickers
+    
+    private var hasScannedDevices: Bool {
+        !bleManager.scannedWiFiDevices.isEmpty || !bleManager.scannedBLEDevices.isEmpty
+    }
+    
+    private var hasScannedSSIDs: Bool {
+        bleManager.scannedWiFiDevices.contains { !$0.ssid.isEmpty }
+    }
+    
+    private var hasScannedBLENames: Bool {
+        bleManager.scannedBLEDevices.contains { !$0.name.isEmpty }
+    }
+    
+    private var scannedDevicePicker: some View {
+        Section {
+            if !bleManager.scannedWiFiDevices.isEmpty {
+                DisclosureGroup("WiFi Devices (\(bleManager.scannedWiFiDevices.count))") {
+                    ForEach(bleManager.scannedWiFiDevices.prefix(20)) { device in
+                        Button {
+                            // Extract MAC prefix (first 3 octets)
+                            let components = device.mac.split(separator: ":").prefix(3)
+                            newPattern = components.joined(separator: ":").lowercased()
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(device.ssid.isEmpty ? "(hidden)" : device.ssid)
+                                        .font(.subheadline)
+                                    Text(device.mac)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .fontDesign(.monospaced)
+                                }
+                                Spacer()
+                                Text("\(device.rssi) dBm")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .foregroundColor(.primary)
+                    }
+                }
+            }
+            
+            if !bleManager.scannedBLEDevices.isEmpty {
+                DisclosureGroup("BLE Devices (\(bleManager.scannedBLEDevices.count))") {
+                    ForEach(bleManager.scannedBLEDevices.prefix(20)) { device in
+                        Button {
+                            // Extract MAC prefix (first 3 octets)
+                            let components = device.mac.split(separator: ":").prefix(3)
+                            newPattern = components.joined(separator: ":").lowercased()
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(device.name.isEmpty ? "(no name)" : device.name)
+                                        .font(.subheadline)
+                                    Text(device.mac)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .fontDesign(.monospaced)
+                                }
+                                Spacer()
+                                Text("\(device.rssi) dBm")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .foregroundColor(.primary)
+                    }
+                }
+            }
+        } header: {
+            HStack {
+                Text("Pick from Scanned Devices")
+                Spacer()
+                Text("Tap to select")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        } footer: {
+            Text("Shows devices recently scanned by the ESP32. Selecting a device will use its MAC prefix.")
+        }
+    }
+    
+    private var scannedSSIDPicker: some View {
+        Section {
+            let uniqueSSIDs = Array(Set(bleManager.scannedWiFiDevices.compactMap { $0.ssid.isEmpty ? nil : $0.ssid })).sorted()
+            ForEach(uniqueSSIDs.prefix(15), id: \.self) { ssid in
+                Button {
+                    newPattern = ssid
+                } label: {
+                    HStack {
+                        Text(ssid)
+                            .font(.subheadline)
+                        Spacer()
+                        if newPattern == ssid {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                }
+                .foregroundColor(.primary)
+            }
+        } header: {
+            Text("Pick from Scanned SSIDs")
+        } footer: {
+            Text("SSIDs discovered by the ESP32 WiFi scan")
+        }
+    }
+    
+    private var scannedBLENamePicker: some View {
+        Section {
+            let uniqueNames = Array(Set(bleManager.scannedBLEDevices.compactMap { $0.name.isEmpty ? nil : $0.name })).sorted()
+            ForEach(uniqueNames.prefix(15), id: \.self) { name in
+                Button {
+                    newPattern = name
+                } label: {
+                    HStack {
+                        Text(name)
+                            .font(.subheadline)
+                        Spacer()
+                        if newPattern == name {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                }
+                .foregroundColor(.primary)
+            }
+        } header: {
+            Text("Pick from Scanned BLE Names")
+        } footer: {
+            Text("BLE device names discovered by the ESP32 scan")
         }
     }
     

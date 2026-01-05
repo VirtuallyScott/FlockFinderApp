@@ -17,6 +17,44 @@ class BLEManager: NSObject, ObservableObject {
     @Published var statusMessage: String = "Ready to scan"
     @Published var bluetoothState: CBManagerState = .unknown
     
+    // MARK: - Scanned Devices from ESP32 Stream (for pattern picker)
+    @Published var scannedWiFiDevices: [ScannedWiFiDevice] = []
+    @Published var scannedBLEDevices: [ScannedBLEDevice] = []
+    
+    /// WiFi device discovered by ESP32 scan
+    struct ScannedWiFiDevice: Identifiable, Hashable {
+        let id: String // MAC address
+        let mac: String
+        let ssid: String
+        var rssi: Int
+        var lastSeen: Date
+        
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(mac)
+        }
+        
+        static func == (lhs: ScannedWiFiDevice, rhs: ScannedWiFiDevice) -> Bool {
+            lhs.mac == rhs.mac
+        }
+    }
+    
+    /// BLE device discovered by ESP32 scan
+    struct ScannedBLEDevice: Identifiable, Hashable {
+        let id: String // MAC address
+        let mac: String
+        let name: String
+        var rssi: Int
+        var lastSeen: Date
+        
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(mac)
+        }
+        
+        static func == (lhs: ScannedBLEDevice, rhs: ScannedBLEDevice) -> Bool {
+            lhs.mac == rhs.mac
+        }
+    }
+    
     // MARK: - Detection callback
     var onDetection: ((DetectionData) -> Void)?
     var onRawData: ((Data, String) -> Void)? // Callback for raw BLE data (data, description)
@@ -348,11 +386,6 @@ class BLEManager: NSObject, ObservableObject {
     var hasConfigSupport: Bool {
         return configCharacteristic != nil
     }
-        }
-        
-        print("[BLE] 📤 Sending command: \(command)")
-        peripheral.writeValue(data, for: characteristic, type: .withResponse)
-    }
     
     /// Request RSSI update
     func readRSSI() {
@@ -419,7 +452,7 @@ class BLEManager: NSObject, ObservableObject {
         // Send to raw data callback for debug stream view
         onRawData?(data, jsonString)
         
-        // Parse for logging
+        // Parse for logging and storing scanned devices
         if let jsonData = jsonString.data(using: .utf8),
            let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
            let event = json["evt"] as? String {
@@ -429,11 +462,27 @@ class BLEManager: NSObject, ObservableObject {
                 let mac = json["mac"] as? String ?? ""
                 let rssi = json["rssi"] as? Int ?? 0
                 print("[BLE] 📡 WiFi: \(ssid.isEmpty ? "(hidden)" : ssid) | \(mac) | \(rssi)dBm")
+                
+                // Store WiFi device for picker
+                if !mac.isEmpty {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.addScannedWiFiDevice(mac: mac, ssid: ssid, rssi: rssi)
+                    }
+                }
+                
             case "ble_scan":
                 let name = json["name"] as? String ?? ""
                 let mac = json["mac"] as? String ?? ""
                 let rssi = json["rssi"] as? Int ?? 0
                 print("[BLE] 📱 BLE: \(name.isEmpty ? "(no name)" : name) | \(mac) | \(rssi)dBm")
+                
+                // Store BLE device for picker
+                if !mac.isEmpty {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.addScannedBLEDevice(mac: mac, name: name, rssi: rssi)
+                    }
+                }
+                
             case "channel":
                 let ch = json["ch"] as? Int ?? 0
                 print("[BLE] 📻 Channel hop: \(ch)")
@@ -444,6 +493,67 @@ class BLEManager: NSObject, ObservableObject {
                 print("[BLE] 📦 Stream: \(jsonString)")
             }
         }
+    }
+    
+    // MARK: - Scanned Device Management
+    
+    private let maxScannedDevices = 100
+    private let deviceExpirationInterval: TimeInterval = 300 // 5 minutes
+    
+    private func addScannedWiFiDevice(mac: String, ssid: String, rssi: Int) {
+        let now = Date()
+        
+        // Check if device already exists
+        if let index = scannedWiFiDevices.firstIndex(where: { $0.mac == mac }) {
+            // Update existing device
+            var device = scannedWiFiDevices[index]
+            device.rssi = rssi
+            device.lastSeen = now
+            scannedWiFiDevices[index] = device
+        } else {
+            // Add new device
+            let device = ScannedWiFiDevice(id: mac, mac: mac, ssid: ssid, rssi: rssi, lastSeen: now)
+            scannedWiFiDevices.insert(device, at: 0)
+            
+            // Trim to max size
+            if scannedWiFiDevices.count > maxScannedDevices {
+                scannedWiFiDevices.removeLast()
+            }
+        }
+        
+        // Clean up old entries
+        scannedWiFiDevices.removeAll { now.timeIntervalSince($0.lastSeen) > deviceExpirationInterval }
+    }
+    
+    private func addScannedBLEDevice(mac: String, name: String, rssi: Int) {
+        let now = Date()
+        
+        // Check if device already exists
+        if let index = scannedBLEDevices.firstIndex(where: { $0.mac == mac }) {
+            // Update existing device
+            var device = scannedBLEDevices[index]
+            device.rssi = rssi
+            device.lastSeen = now
+            scannedBLEDevices[index] = device
+        } else {
+            // Add new device
+            let device = ScannedBLEDevice(id: mac, mac: mac, name: name, rssi: rssi, lastSeen: now)
+            scannedBLEDevices.insert(device, at: 0)
+            
+            // Trim to max size
+            if scannedBLEDevices.count > maxScannedDevices {
+                scannedBLEDevices.removeLast()
+            }
+        }
+        
+        // Clean up old entries
+        scannedBLEDevices.removeAll { now.timeIntervalSince($0.lastSeen) > deviceExpirationInterval }
+    }
+    
+    /// Clear all scanned devices
+    func clearScannedDevices() {
+        scannedWiFiDevices.removeAll()
+        scannedBLEDevices.removeAll()
     }
     
     private func isFlockFinderDevice(name: String?, advertisementData: [String: Any]) -> Bool {

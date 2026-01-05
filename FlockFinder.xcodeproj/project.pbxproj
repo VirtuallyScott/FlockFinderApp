@@ -18,6 +18,7 @@
 		009 /* DatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109 /* DatabaseManager.swift */; };
 		010 /* FlockDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110 /* FlockDetection.swift */; };
 		011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 111 /* Assets.xcassets */; };
+		468D4F752F0C1DD3003A9E02 /* ScanConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 468D4F742F0C1DD3003A9E02 /* ScanConfiguration.swift */; };
 		46B0B3A32F09BD82002F107B /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46B0B3A22F09BD82002F107B /* AppSettings.swift */; };
 		46B0B3A52F09BDA2002F107B /* AudioAlertManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46B0B3A42F09BDA2002F107B /* AudioAlertManager.swift */; };
 		46B0B3A72F09BE2B002F107B /* DetectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46B0B3A62F09BE2B002F107B /* DetectionCoordinator.swift */; };
@@ -41,6 +42,7 @@
 		110 /* FlockDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlockDetection.swift; sourceTree = "<group>"; };
 		111 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		112 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		468D4F742F0C1DD3003A9E02 /* ScanConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanConfiguration.swift; sourceTree = "<group>"; };
 		46B0B3A22F09BD82002F107B /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		46B0B3A42F09BDA2002F107B /* AudioAlertManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAlertManager.swift; sourceTree = "<group>"; };
 		46B0B3A62F09BE2B002F107B /* DetectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectionCoordinator.swift; sourceTree = "<group>"; };
@@ -117,6 +119,7 @@
 				107 /* LocationManager.swift */,
 				108 /* MotionManager.swift */,
 				109 /* DatabaseManager.swift */,
+				468D4F742F0C1DD3003A9E02 /* ScanConfiguration.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -215,6 +218,7 @@
 				008 /* MotionManager.swift in Sources */,
 				009 /* DatabaseManager.swift in Sources */,
 				010 /* FlockDetection.swift in Sources */,
+				468D4F752F0C1DD3003A9E02 /* ScanConfiguration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
