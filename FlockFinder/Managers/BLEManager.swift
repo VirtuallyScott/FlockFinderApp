@@ -26,6 +26,7 @@ class BLEManager: NSObject, ObservableObject {
     static let detectionCharacteristicUUID = CBUUID(string: "beb5483e-36e1-4688-b7f5-ea07361b26a8")
     static let commandCharacteristicUUID = CBUUID(string: "beb5483e-36e1-4688-b7f5-ea07361b26a9")
     static let streamCharacteristicUUID = CBUUID(string: "beb5483e-36e1-4688-b7f5-ea07361b26aa")  // Live scan stream
+    static let configCharacteristicUUID = CBUUID(string: "beb5483e-36e1-4688-b7f5-ea07361b26ab")  // Configuration transfer
     
     // Device name patterns to look for (case insensitive)
     static let deviceNamePatterns = ["flockfinder", "flock", "feather", "esp32", "s3"]
@@ -35,6 +36,13 @@ class BLEManager: NSObject, ObservableObject {
     private var detectionCharacteristic: CBCharacteristic?
     private var commandCharacteristic: CBCharacteristic?
     private var streamCharacteristic: CBCharacteristic?  // Live scan stream
+    private var configCharacteristic: CBCharacteristic?  // Configuration transfer
+    
+    // Config transfer state
+    private var configReceiveBuffer: String = ""
+    private var configTransferInProgress: Bool = false
+    var onConfigReceived: ((String) -> Void)?  // Callback when config received from ESP32
+    var onConfigSyncComplete: ((Bool, String?) -> Void)?  // Callback when config sync completes
     private var rssiTimer: Timer?
     private var scanTimer: Timer?
     private var peripheralReferences: [UUID: CBPeripheral] = [:] // Keep strong references to prevent deallocation
@@ -204,6 +212,148 @@ class BLEManager: NSObject, ObservableObject {
         peripheral.writeValue(data, for: characteristic, type: .withResponse)
     }
     
+    // MARK: - Configuration Sync Methods
+    
+    /// Request current configuration from ESP32
+    func requestConfiguration() {
+        sendCommand("GET_CONFIG")
+    }
+    
+    /// Tell ESP32 to save current config to flash
+    func saveConfigurationToFlash() {
+        sendCommand("SAVE_CONFIG")
+    }
+    
+    /// Tell ESP32 to reset config to defaults
+    func resetConfigurationToDefaults() {
+        sendCommand("RESET_CONFIG")
+    }
+    
+    /// Send configuration to ESP32
+    func sendConfiguration(_ config: ScanConfiguration) {
+        guard let configCharacteristic = configCharacteristic,
+              let peripheral = connectedDevice else {
+            print("[BLE] ❌ Cannot send config - not connected or config characteristic not found")
+            onConfigSyncComplete?(false, "Not connected")
+            return
+        }
+        
+        guard let jsonString = config.toJsonString() else {
+            print("[BLE] ❌ Failed to serialize configuration")
+            onConfigSyncComplete?(false, "Serialization failed")
+            return
+        }
+        
+        print("[BLE] 📤 Sending configuration (\(jsonString.count) bytes)")
+        
+        // Use chunked transfer if config is large
+        let maxChunkSize = 480  // Leave room for BLE overhead
+        
+        if jsonString.count <= maxChunkSize {
+            // Single packet transfer
+            if let data = jsonString.data(using: .utf8) {
+                peripheral.writeValue(data, for: configCharacteristic, type: .withResponse)
+            }
+        } else {
+            // Chunked transfer
+            sendConfigChunked(jsonString, to: peripheral, characteristic: configCharacteristic)
+        }
+    }
+    
+    /// Send configuration in chunks for large configs
+    private func sendConfigChunked(_ json: String, to peripheral: CBPeripheral, characteristic: CBCharacteristic) {
+        let chunkSize = 480
+        var offset = 0
+        
+        // Send start marker
+        if let startData = "CONFIG_START".data(using: .utf8) {
+            peripheral.writeValue(startData, for: characteristic, type: .withResponse)
+        }
+        
+        // Send chunks with slight delay to prevent buffer overflow
+        let chunks = stride(from: 0, to: json.count, by: chunkSize).map {
+            String(json[json.index(json.startIndex, offsetBy: $0)..<json.index(json.startIndex, offsetBy: min($0 + chunkSize, json.count))])
+        }
+        
+        for (index, chunk) in chunks.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.05) {
+                if let data = chunk.data(using: .utf8) {
+                    peripheral.writeValue(data, for: characteristic, type: .withResponse)
+                    print("[BLE] 📤 Sent config chunk \(index + 1)/\(chunks.count)")
+                }
+            }
+        }
+        
+        // Send end marker after all chunks
+        DispatchQueue.main.asyncAfter(deadline: .now() + Double(chunks.count) * 0.05 + 0.1) {
+            if let endData = "CONFIG_END".data(using: .utf8) {
+                peripheral.writeValue(endData, for: characteristic, type: .withResponse)
+                print("[BLE] 📤 Sent config end marker")
+            }
+        }
+    }
+    
+    /// Process configuration data received from ESP32
+    private func processConfigData(_ data: Data) {
+        guard let dataString = String(data: data, encoding: .utf8) else {
+            print("[BLE] ❌ Failed to decode config data as UTF-8")
+            return
+        }
+        
+        print("[BLE] 📥 Config data received: \(dataString.prefix(100))...")
+        
+        // Check for chunked transfer markers
+        if dataString.hasPrefix("CONFIG_START") {
+            configReceiveBuffer = ""
+            configTransferInProgress = true
+            print("[BLE] 📥 Starting chunked config receive")
+            return
+        }
+        
+        if dataString == "CONFIG_END" {
+            configTransferInProgress = false
+            print("[BLE] 📥 Config receive complete (\(configReceiveBuffer.count) bytes)")
+            onConfigReceived?(configReceiveBuffer)
+            configReceiveBuffer = ""
+            return
+        }
+        
+        // Check for response messages
+        if dataString.hasPrefix("{") && dataString.contains("\"response\"") {
+            // This is a response message, not config data
+            if let responseData = dataString.data(using: .utf8),
+               let json = try? JSONSerialization.jsonObject(with: responseData) as? [String: Any] {
+                let success = json["success"] as? Bool ?? false
+                let message = json["message"] as? String
+                onConfigSyncComplete?(success, message)
+            }
+            return
+        }
+        
+        if configTransferInProgress {
+            // Append chunk to buffer
+            configReceiveBuffer += dataString
+            print("[BLE] 📥 Buffered chunk, total: \(configReceiveBuffer.count) bytes")
+            return
+        }
+        
+        // Single-packet config (starts with {)
+        if dataString.hasPrefix("{") {
+            print("[BLE] 📥 Received single-packet config")
+            onConfigReceived?(dataString)
+        }
+    }
+    
+    /// Check if config characteristic is available
+    var hasConfigSupport: Bool {
+        return configCharacteristic != nil
+    }
+        }
+        
+        print("[BLE] 📤 Sending command: \(command)")
+        peripheral.writeValue(data, for: characteristic, type: .withResponse)
+    }
+    
     /// Request RSSI update
     func readRSSI() {
         connectedDevice?.readRSSI()
@@ -217,6 +367,9 @@ class BLEManager: NSObject, ObservableObject {
         detectionCharacteristic = nil
         commandCharacteristic = nil
         streamCharacteristic = nil
+        configCharacteristic = nil
+        configReceiveBuffer = ""
+        configTransferInProgress = false
         connectionState = .disconnected
         statusMessage = "Disconnected"
         rssiTimer?.invalidate()
@@ -472,7 +625,7 @@ extension BLEManager: CBPeripheralDelegate {
                 print("[BLE] ✅ Found FlockFinder service!")
                 statusMessage = "Found FlockFinder service"
                 peripheral.discoverCharacteristics(
-                    [Self.detectionCharacteristicUUID, Self.commandCharacteristicUUID, Self.streamCharacteristicUUID],
+                    [Self.detectionCharacteristicUUID, Self.commandCharacteristicUUID, Self.streamCharacteristicUUID, Self.configCharacteristicUUID],
                     for: service
                 )
             }
@@ -510,6 +663,11 @@ extension BLEManager: CBPeripheralDelegate {
                 streamCharacteristic = characteristic
                 peripheral.setNotifyValue(true, for: characteristic)
                 
+            case Self.configCharacteristicUUID:
+                print("[BLE] ✅ Found config characteristic - subscribing to notifications")
+                configCharacteristic = characteristic
+                peripheral.setNotifyValue(true, for: characteristic)
+                
             default:
                 break
             }
@@ -541,6 +699,9 @@ extension BLEManager: CBPeripheralDelegate {
             
         case Self.streamCharacteristicUUID:
             processStreamData(data)
+            
+        case Self.configCharacteristicUUID:
+            processConfigData(data)
             
         default:
             break
