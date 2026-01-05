@@ -118,6 +118,23 @@ struct SettingsView: View {
                         Button("Disconnect", role: .destructive) {
                             bleManager.disconnect()
                         }
+                        
+                        // Detection Patterns Configuration
+                        NavigationLink {
+                            ConfigurationView(bleManager: bleManager)
+                        } label: {
+                            HStack {
+                                Image(systemName: "antenna.radiowaves.left.and.right")
+                                    .foregroundColor(.orange)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Detection Patterns")
+                                        .font(.subheadline)
+                                    Text("Configure MAC addresses & SSIDs to alert on")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
                     } else {
                         HStack {
                             Image(systemName: "antenna.radiowaves.left.and.right.slash")
