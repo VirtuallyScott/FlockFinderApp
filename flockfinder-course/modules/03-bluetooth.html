@@ -1,0 +1,239 @@
+<section class="module" id="module-3" style="background: var(--color-bg)">
+  <div class="module-content">
+
+    <header class="module-header animate-in">
+      <span class="module-number">03</span>
+      <h1 class="module-title">Speaking Bluetooth</h1>
+      <p class="module-subtitle">How the ESP32 hardware "talks" to your iPhone — the invisible protocol that delivers every detection across the air.</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- SCREEN 1: What is BLE? -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Bluetooth, but Make It Lean</h2>
+        <p>Classic Bluetooth (in speakers and headphones) streams audio continuously — it's like a running water tap. <span class="term" data-definition="Bluetooth Low Energy (BLE) is a version of Bluetooth designed for devices that send small bursts of data infrequently — heart rate monitors, key trackers, sensors. It uses ~10x less power than classic Bluetooth.">Bluetooth Low Energy (BLE)</span> is more like a postal service — small, precisely addressed packets, only when there's something to say.</p>
+        <p>This is perfect for FlockFinder: the hardware only needs to send a short JSON message when it detects a camera. No need for a constant stream.</p>
+
+        <div class="step-cards animate-in">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>Advertise</strong>
+              <p>The ESP32 broadcasts a BLE advertisement — like holding up a sign that says "FlockFinder-S3 is here." Your iPhone sees it while scanning.</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>Connect</strong>
+              <p>Your iPhone establishes a private BLE connection. It goes from "I see you" to "let&apos;s talk." Only one device can be connected at a time.</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>Discover Services</strong>
+              <p>The iPhone asks: "What can you do?" The ESP32 lists its <span class="term" data-definition="A BLE Service is a logical grouping of related capabilities — like a chapter in a manual. A fitness tracker might have a 'Heart Rate' service and a 'Battery' service.">services</span>. The FlockFinder service contains the detection channel.</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>Subscribe to Notifications</strong>
+              <p>The iPhone subscribes to the detection <span class="term" data-definition="A BLE Characteristic is a specific data slot within a service — like a specific field on a form. It can be readable, writable, or notifiable (meaning it pushes updates to connected devices).">characteristic</span>: "Tell me every time you find something." From now on, the ESP32 pushes detections without being asked.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: UUIDs — The Channel Numbers -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Channel Numbers: UUIDs</h2>
+        <p>In BLE, every service and characteristic gets a unique ID called a <span class="term" data-definition="UUID stands for Universally Unique Identifier — a 128-bit number guaranteed to be unique enough that no two devices will ever accidentally share it. They look like: 4fafc201-1fb5-459e-8fcc-c5c9c331914b.">UUID</span>. Think of it like a radio channel number. Both devices must agree on the exact same numbers — if they don't match, they can't communicate.</p>
+        <p>These UUIDs are hardcoded in the iOS app and must match what's programmed into the ESP32 firmware:</p>
+
+        <div class="badge-list animate-in">
+          <div class="badge-item">
+            <span class="badge-code">4fafc201-…914b</span>
+            <span class="badge-desc"><strong>Service UUID</strong> — the "FlockFinder station" on the BLE radio. Both devices tune to this.</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">beb5483e-…26a8</span>
+            <span class="badge-desc"><strong>Detection Characteristic</strong> — the specific channel that pushes camera detections as notifications (read-only, notify).</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">beb5483e-…26a9</span>
+            <span class="badge-desc"><strong>Command Characteristic</strong> — a writable channel used to send commands back to the ESP32 (e.g., trigger a scan).</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">beb5483e-…26aa</span>
+            <span class="badge-desc"><strong>Stream Characteristic</strong> — a live feed of everything the ESP32 sees, used for the Debug Stream view.</span>
+          </div>
+        </div>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-line"><span class="code-keyword">static let</span> flockServiceUUID =</span>
+<span class="code-line">    <span class="code-function">CBUUID</span>(string: <span class="code-string">"4fafc201-1fb5-459e-8fcc-c5c9c331914b"</span>)</span>
+<span class="code-line"><span class="code-keyword">static let</span> detectionCharacteristicUUID =</span>
+<span class="code-line">    <span class="code-function">CBUUID</span>(string: <span class="code-string">"beb5483e-36e1-4688-b7f5-ea07361b26a8"</span>)</span>
+<span class="code-line"><span class="code-keyword">static let</span> commandCharacteristicUUID =</span>
+<span class="code-line">    <span class="code-function">CBUUID</span>(string: <span class="code-string">"beb5483e-36e1-4688-b7f5-ea07361b26a9"</span>)</span>
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Create a permanent (static) UUID constant for the main FlockFinder service...</p>
+              <p class="tl">...using this exact 128-character ID. If the ESP32 firmware uses a different one, they won&apos;t connect.</p>
+              <p class="tl">Create a UUID for the detection channel (where camera alerts come from)...</p>
+              <p class="tl">...this ends in "a8" — it&apos;s the read/notify characteristic.</p>
+              <p class="tl">Create a UUID for the command channel (where we send instructions to the device)...</p>
+              <p class="tl">...this ends in "a9" — the next sequential ID, a writable characteristic.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: The JSON Message -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Message Format: JSON</h2>
+        <p>When the ESP32 detects a camera, it sends a tiny text message in <span class="term" data-definition="JSON (JavaScript Object Notation) is a text format for structured data. It uses curly braces for objects and colons to assign values. Despite the name, it's used in almost every programming language — Swift, Python, Kotlin, you name it.">JSON</span> format over the detection characteristic. The iOS app parses this JSON into a Swift object.</p>
+        <p>Here&apos;s what a real detection message looks like on the wire:</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">JSON from ESP32</span>
+            <pre><code>
+<span class="code-line">{</span>
+<span class="code-line">  <span class="code-string">"type"</span>: <span class="code-string">"Flock Safety"</span>,</span>
+<span class="code-line">  <span class="code-string">"mac"</span>: <span class="code-string">"AA:BB:CC:DD:EE:FF"</span>,</span>
+<span class="code-line">  <span class="code-string">"ssid"</span>: <span class="code-string">"FLOCK-CAM-001"</span>,</span>
+<span class="code-line">  <span class="code-string">"rssi"</span>: <span class="code-number">-55</span>,</span>
+<span class="code-line">  <span class="code-string">"confidence"</span>: <span class="code-number">0.95</span>,</span>
+<span class="code-line">  <span class="code-string">"ts"</span>: <span class="code-number">123456789</span></span>
+<span class="code-line">}</span>
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Start of the detection data package.</p>
+              <p class="tl">What kind of device: a Flock Safety ALPR camera.</p>
+              <p class="tl">Hardware ID of the camera (unique to this physical device).</p>
+              <p class="tl">The Wi-Fi network name the camera broadcasts — "FLOCK-CAM-001".</p>
+              <p class="tl">Signal strength: -55 dBm (strong — the closer to 0, the stronger).</p>
+              <p class="tl">How sure the ESP32 is that this is a Flock camera: 95% confident.</p>
+              <p class="tl">Timestamp from the ESP32 (seconds since it booted).</p>
+              <p class="tl">End of the package.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info animate-in">
+          <div class="callout-icon">ℹ️</div>
+          <div class="callout-content">
+            <strong class="callout-title">Why Text? Why Not Binary?</strong>
+            <p>JSON is human-readable text, which makes debugging easy — you can literally read the message. The payload is tiny (under 200 bytes) so the minor overhead compared to packed binary doesn&apos;t matter. For FlockFinder&apos;s use case, readability wins over micro-optimization.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: BLE Flow Animation -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The BLE Connection Sequence</h2>
+        <p>From "Bluetooth off" to "notification received" — step through the exact sequence of events the iOS CoreBluetooth framework goes through.</p>
+
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"The iPhone app calls startScanning(). CoreBluetooth begins listening for BLE advertisements nearby."},
+          {"highlight":"flow-actor-2","label":"The ESP32 device broadcasts its advertisement packet — its name and service UUID. iPhone hears it.","packet":true,"from":"actor-2","to":"actor-1"},
+          {"highlight":"flow-actor-1","label":"BLEManager receives the discovered peripheral callback. It checks the device name against known patterns (flockfinder, feather, esp32...)."},
+          {"highlight":"flow-actor-1","label":"Match found! BLEManager calls centralManager.connect() and stops scanning.","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"Connection established. ESP32 is now the peripheral, iPhone is the central. State transitions to .connected."},
+          {"highlight":"flow-actor-1","label":"BLEManager calls discoverServices(). The ESP32 responds with the FlockFinder service.","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"Services discovered. BLEManager then calls discoverCharacteristics() to find the detection, command, and stream channels.","packet":true,"from":"actor-2","to":"actor-1"},
+          {"highlight":"flow-actor-1","label":"BLEManager calls setNotifyValue(true) on the detection characteristic — subscribing to push notifications."},
+          {"highlight":"flow-actor-2","label":"Camera detected! ESP32 sends a JSON notification on the detection characteristic without being asked.","packet":true,"from":"actor-2","to":"actor-1"},
+          {"highlight":"flow-actor-1","label":"didUpdateValueFor fires. BLEManager parses the JSON and calls onDetection(detectionData). Mission complete!"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">📱</div>
+              <span>iPhone<br>BLEManager</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">📡</div>
+              <span>ESP32<br>Hardware</span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">Click "Next Step" to begin</div>
+          <div class="flow-controls">
+            <button type="button" class="btn flow-next-btn">Next Step</button>
+            <button type="button" class="btn flow-reset-btn">Restart</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: Quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Test Your Understanding</h2>
+
+        <div class="quiz-container" id="quiz-module3">
+
+          <div class="quiz-question-block"
+               data-correct="option-c"
+               data-explanation-right="Correct — UUIDs are how devices agree on which channel to use. If either side has a typo or a different UUID, they discover services but nothing matches. The connection succeeds but no data flows."
+               data-explanation-wrong="UUIDs are the channel identifiers, not something that changes with distance or settings. If the app connects successfully but gets no detections, a UUID mismatch is a prime suspect.">
+            <h3 class="quiz-question">Your ESP32 connects to the iOS app but you never receive any detection notifications. The connection state shows "Connected" but the detection characteristic appears empty. What&apos;s the most likely cause?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The device is too far away — BLE range is limited to about 1 meter</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The iOS app needs Location permission to receive BLE data</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The detection characteristic UUID in the app doesn&apos;t match the UUID in the ESP32 firmware</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-a"
+               data-explanation-right="Right — the Command Characteristic (ending ...26a9) is the writable channel. The detection characteristic (...26a8) is read-only/notify — the ESP32 pushes to it, the phone can only listen. To send instructions, you write to the command channel."
+               data-explanation-wrong="Look at the badge list in this module. There are three characteristics: detection (notify), command (write), and stream. Which one is designed for sending messages TO the device?">
+            <h3 class="quiz-question">You want to add a feature to send a &quot;test ping&quot; command from the iPhone to the ESP32. Which characteristic UUID would you write to?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>commandCharacteristicUUID (beb5483e-...26a9) — it was designed for write operations</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>detectionCharacteristicUUID (beb5483e-...26a8) — it&apos;s the main data channel</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>flockServiceUUID — services are the top-level communication channel</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button type="button" class="quiz-check-btn" onclick="checkQuiz('quiz-module3')">Check Answers</button>
+          <button type="button" class="quiz-reset-btn" onclick="resetQuiz('quiz-module3')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

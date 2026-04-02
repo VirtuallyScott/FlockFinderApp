@@ -1,0 +1,264 @@
+<section class="module" id="module-2" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+
+    <header class="module-header animate-in">
+      <span class="module-number">02</span>
+      <h1 class="module-title">Meet the Cast</h1>
+      <p class="module-subtitle">Five specialist managers and one coordinator — each with a single job, each talking to the others through a careful chain of command.</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- SCREEN 1: The Crew -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Team Behind Every Detection</h2>
+        <p>Think of FlockFinder's app like a <strong>submarine crew</strong> — every person has one role, no one does someone else's job, and the captain coordinates them all without physically pulling the levers. If one person is asleep, the whole mission fails.</p>
+        <p>In code, each crew member is a <span class="term" data-definition="A class is a blueprint for creating objects. It bundles together data (properties) and actions (functions) related to one specific role. You can make many copies of a class — each copy is called an instance.">class</span> called a <strong>Manager</strong>. Here's the full roster:</p>
+
+        <div class="pattern-cards stagger-children">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-accent-light); color: var(--color-actor-1)">📶</div>
+            <h4 class="pattern-title">BLEManager</h4>
+            <p class="pattern-desc">The Radio Operator. Speaks Bluetooth to the ESP32 hardware. Scans, connects, and receives detection messages.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-info-light); color: var(--color-actor-2)">📍</div>
+            <h4 class="pattern-title">LocationManager</h4>
+            <p class="pattern-desc">The Navigator. Tracks your GPS position, speed, compass heading, and updates whenever you move 5+ meters.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: #EEE8FF; color: var(--color-actor-3)">💾</div>
+            <h4 class="pattern-title">DatabaseManager</h4>
+            <p class="pattern-desc">The Archivist. Writes every detection to the on-device SQLite database, fetches history, handles exports.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: #FDF5E0; color: var(--color-actor-4)">🏃</div>
+            <h4 class="pattern-title">MotionManager</h4>
+            <p class="pattern-desc">The Speedometer. Uses the iPhone's accelerometer to detect if you're walking, driving, or stationary.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-5)">
+            <div class="pattern-icon" style="background: var(--color-success-light); color: var(--color-actor-5)">🔔</div>
+            <h4 class="pattern-title">AudioAlertManager</h4>
+            <p class="pattern-desc">The Alarm. Plays detection sounds and manages the haptic buzz — completely separate from the rest of the logic.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-accent)">
+            <div class="pattern-icon" style="background: var(--color-accent-light); color: var(--color-accent)">🎯</div>
+            <h4 class="pattern-title">DetectionCoordinator</h4>
+            <p class="pattern-desc">The Captain. Knows nobody else's job — just the order things need to happen. Calls all managers in sequence on every detection.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: The File Tree -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Where to Find Each Character</h2>
+        <p>The project folder is organized so each character lives in a logical place. Knowing the map means you can find the right file instantly instead of asking AI to search for it.</p>
+
+        <div class="file-tree animate-in">
+          <div class="ft-folder">
+            <span class="ft-name">FlockFinder/</span>
+            <div class="ft-children">
+              <div class="ft-folder">
+                <span class="ft-name">Managers/</span>
+                <div class="ft-children">
+                  <div class="ft-file"><span class="ft-name">BLEManager.swift</span><span class="ft-desc">— Bluetooth radio operator</span></div>
+                  <div class="ft-file"><span class="ft-name">LocationManager.swift</span><span class="ft-desc">— GPS tracking</span></div>
+                  <div class="ft-file"><span class="ft-name">DatabaseManager.swift</span><span class="ft-desc">— SQLite archivist</span></div>
+                  <div class="ft-file"><span class="ft-name">MotionManager.swift</span><span class="ft-desc">— Accelerometer / activity</span></div>
+                </div>
+              </div>
+              <div class="ft-folder">
+                <span class="ft-name">Views/</span>
+                <div class="ft-children">
+                  <div class="ft-file"><span class="ft-name">DetectionCoordinator.swift</span><span class="ft-desc">— The captain who calls everyone</span></div>
+                  <div class="ft-file"><span class="ft-name">AudioAlertManager.swift</span><span class="ft-desc">— Sound &amp; haptics</span></div>
+                  <div class="ft-file"><span class="ft-name">ContentView.swift</span><span class="ft-desc">— The main 4-tab screen</span></div>
+                </div>
+              </div>
+              <div class="ft-folder">
+                <span class="ft-name">Models/</span>
+                <div class="ft-children">
+                  <div class="ft-file"><span class="ft-name">FlockDetection.swift</span><span class="ft-desc">— The data shape for one detection</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info animate-in">
+          <div class="callout-icon">ℹ️</div>
+          <div class="callout-content">
+            <strong class="callout-title">Why Managers Folder vs Views Folder?</strong>
+            <p>Managers don't draw anything on screen — they just do work. Views draw the UI. DetectionCoordinator and AudioAlertManager ended up in Views/ because they interact with iOS <span class="term" data-definition="UIKit is Apple's older UI framework for iOS, used for things like vibration (haptic) feedback, alert sounds, and push notifications. SwiftUI is the newer one — but some features still require UIKit.">UIKit</span> features like haptics, which blur the line. If you're new to a codebase, don't worry about folder names — just search for the class.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: @Published and ObservableObject -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">How the UI Stays in Sync</h2>
+        <p>Each manager is declared as an <span class="term" data-definition="ObservableObject is a Swift protocol that makes a class 'watchable.' When any @Published property changes, SwiftUI automatically re-renders every view that observes it — no manual refresh needed.">ObservableObject</span>. Their properties are marked <span class="term" data-definition="@Published is a special marker in Swift that says: 'When this value changes, tell everyone who is watching.' It's like subscribing to a news feed — the moment the value updates, all connected views re-draw themselves.">@Published</span>. This is the mechanism that makes your screen update the moment a new detection arrives.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-line"><span class="code-keyword">class</span> <span class="code-function">BLEManager</span>: NSObject, ObservableObject {</span>
+<span class="code-line">    <span class="code-keyword">@Published var</span> isScanning = <span class="code-keyword">false</span></span>
+<span class="code-line">    <span class="code-keyword">@Published var</span> isConnected = <span class="code-keyword">false</span></span>
+<span class="code-line">    <span class="code-keyword">@Published var</span> connectionState: ConnectionState = .disconnected</span>
+<span class="code-line">    <span class="code-keyword">@Published var</span> recentDetections: [FlockDetection] = []</span>
+<span class="code-line">    <span class="code-keyword">@Published var</span> statusMessage: <span class="code-string">String</span> = <span class="code-string">"Ready to scan"</span></span>
+<span class="code-line">}</span>
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Create a class called BLEManager. The "ObservableObject" part means views can watch it for changes.</p>
+              <p class="tl">Watchable: whether we're currently scanning for devices.</p>
+              <p class="tl">Watchable: whether we're connected to the ESP32.</p>
+              <p class="tl">Watchable: a description of the current state (disconnected, scanning, connected, etc).</p>
+              <p class="tl">Watchable: the list of recent detections — when this changes, the map and history update instantly.</p>
+              <p class="tl">Watchable: the status text shown to the user ("Ready to scan", "Found device"...).</p>
+              <p class="tl">End of class definition.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent animate-in">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">The Bulletin Board Metaphor</strong>
+            <p>Think of @Published properties as items pinned to a bulletin board. Any view that "subscribes" to the board automatically sees updates the moment something changes — without anyone manually notifying them. Engineers call this the <span class="term" data-definition="The Observer pattern connects 'publishers' (things that change) to 'subscribers' (things that react to changes) without them needing to know about each other. SwiftUI's @Published/@StateObject is a modern version of this classic pattern.">Observer pattern</span>.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: Group Chat — A detection arrives -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Crew in Action</h2>
+        <p>Watch how the managers talk to each other when a detection comes in. Click "Next Message" to see the conversation unfold.</p>
+
+        <div class="chat-window" id="chat-module2">
+          <div class="chat-messages">
+
+            <div class="chat-message" data-msg="0" data-sender="ble" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-1)">BLE</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-1)">BLEManager</span>
+                <p>Hey Coordinator! Just got a notification from the ESP32. Found a Flock Safety camera. MAC address AA:BB:CC:DD:EE:FF, signal -55 dBm, confidence 0.95.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="1" data-sender="coord" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-accent)">CO</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-accent)">DetectionCoordinator</span>
+                <p>Got it. Confidence is 0.95 — above threshold. LocationManager, what&apos;s our position right now?</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="2" data-sender="loc" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-2)">LOC</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-2)">LocationManager</span>
+                <p>37.7749° N, 122.4194° W. Heading 045°, speed 28 mph, accuracy ±4m.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="3" data-sender="coord" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-accent)">CO</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-accent)">DetectionCoordinator</span>
+                <p>Perfect. Building the full detection record now. DatabaseManager — save this.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="4" data-sender="db" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">DB</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-3)">DatabaseManager</span>
+                <p>Saved. Detection ID: 1042. iCloud backup scheduled.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="5" data-sender="coord" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-accent)">CO</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-accent)">DetectionCoordinator</span>
+                <p>AudioManager — alert please. And BLEManager, add this to your recent detections list so the UI updates.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="6" data-sender="audio" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-5)">AU</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-5)">AudioAlertManager</span>
+                <p>🔊 Played detection alert. Haptic buzz sent.</p>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="chat-typing" id="chat-module2-typing" style="display:none">
+            <div class="chat-avatar" id="chat-module2-typing-avatar">?</div>
+            <div class="chat-typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+
+          <div class="chat-controls">
+            <button type="button" class="btn chat-next-btn">Next Message</button>
+            <button type="button" class="btn chat-all-btn">Play All</button>
+            <button type="button" class="btn chat-reset-btn">Replay</button>
+            <span class="chat-progress"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: Drag and match quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Match Each Manager to Its Job</h2>
+        <p>Drag each manager name to the description that matches what it does — you can drag on mobile too.</p>
+
+        <div class="dnd-container" id="dnd-module2">
+          <div class="dnd-chips">
+            <div class="dnd-chip" draggable="true" data-answer="ble">BLEManager</div>
+            <div class="dnd-chip" draggable="true" data-answer="loc">LocationManager</div>
+            <div class="dnd-chip" draggable="true" data-answer="db">DatabaseManager</div>
+            <div class="dnd-chip" draggable="true" data-answer="coord">DetectionCoordinator</div>
+            <div class="dnd-chip" draggable="true" data-answer="audio">AudioAlertManager</div>
+          </div>
+          <div class="dnd-zones">
+            <div class="dnd-zone" data-correct="coord">
+              <p class="dnd-zone-label">Calls all other managers in order when a detection arrives. Doesn&apos;t do any of the actual work itself.</p>
+              <div class="dnd-zone-target">Drop here</div>
+            </div>
+            <div class="dnd-zone" data-correct="ble">
+              <p class="dnd-zone-label">Connects to the ESP32 hardware over Bluetooth and receives detection notifications.</p>
+              <div class="dnd-zone-target">Drop here</div>
+            </div>
+            <div class="dnd-zone" data-correct="db">
+              <p class="dnd-zone-label">Saves detection records to a local database file and retrieves history for display.</p>
+              <div class="dnd-zone-target">Drop here</div>
+            </div>
+            <div class="dnd-zone" data-correct="loc">
+              <p class="dnd-zone-label">Tracks GPS position, speed, and compass direction using the iPhone&apos;s location hardware.</p>
+              <div class="dnd-zone-target">Drop here</div>
+            </div>
+            <div class="dnd-zone" data-correct="audio">
+              <p class="dnd-zone-label">Plays the detection sound and triggers the haptic buzz in the phone.</p>
+              <div class="dnd-zone-target">Drop here</div>
+            </div>
+          </div>
+          <button type="button" onclick="checkDnD('dnd-module2')" style="margin-top: 1rem; padding: 0.5rem 1.5rem; background: var(--color-accent); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Check Matches</button>
+          <button type="button" onclick="resetDnD('dnd-module2')" style="margin-top: 1rem; margin-left: 0.75rem; padding: 0.5rem 1.5rem; background: white; border: 1px solid var(--color-border); border-radius: 8px; font-weight: 600; cursor: pointer;">Reset</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

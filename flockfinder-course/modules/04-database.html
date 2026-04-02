@@ -1,0 +1,247 @@
+<section class="module" id="module-4" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+
+    <header class="module-header animate-in">
+      <span class="module-number">04</span>
+      <h1 class="module-title">The Filing System</h1>
+      <p class="module-subtitle">How FlockFinder stores thousands of detections permanently — without needing a server, an account, or a Wi-Fi connection.</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- SCREEN 1: What is SQLite? -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Library in Your Pocket</h2>
+        <p>Think of a traditional library: books are organized by category, every book has an entry in the card catalog, and you can ask a librarian to find all books by a certain author, published before a certain year, in under a minute.</p>
+        <p><span class="term" data-definition="SQLite is a self-contained database engine stored as a single file on disk. Unlike most databases, it has no server — the app reads and writes directly to the file. It's built into iOS, Android, macOS, and most other platforms.">SQLite</span> is that library — except it lives in a single file on your iPhone. There's no server, no internet connection needed, no account required. FlockFinder creates a file called <code>flockfinder.sqlite</code> in your phone's private storage the first time it runs.</p>
+
+        <div class="pattern-cards animate-in stagger-children">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-accent-light)">📂</div>
+            <h4 class="pattern-title">It&apos;s Just a File</h4>
+            <p class="pattern-desc">The entire database lives in one <code>.sqlite</code> file on device. Back it up by copying the file. Delete the file and all data is gone.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-info-light)">🔍</div>
+            <h4 class="pattern-title">You Query It with SQL</h4>
+            <p class="pattern-desc"><span class="term" data-definition="SQL (Structured Query Language) is the language used to ask questions of a database. SELECT retrieves data, INSERT adds it, DELETE removes it. It reads almost like English.">SQL</span> lets you ask questions like: &quot;Give me all Flock Safety detections from this week, ordered by time.&quot;</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: #EEE8FF">⚡</div>
+            <h4 class="pattern-title">Built Into iOS</h4>
+            <p class="pattern-desc">Apple ships SQLite3 with every iPhone. FlockFinder uses C-level SQLite3 bindings directly — no third-party library, no extra download.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: The Detection Schema -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">How Detections Are Shaped in the Database</h2>
+        <p>Every piece of data lives in a table — like a spreadsheet. Each <span class="term" data-definition="In a database, a column is one field in a table — like a spreadsheet column. Each row is one record (one detection). The schema defines what columns exist and what type of data each holds.">column</span> in the table stores one piece of information. Here&apos;s the exact schema FlockFinder creates:</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">SQL SCHEMA</span>
+            <pre><code>
+<span class="code-line"><span class="code-keyword">CREATE TABLE IF NOT EXISTS</span> detections (</span>
+<span class="code-line">    id <span class="code-string">INTEGER</span> <span class="code-keyword">PRIMARY KEY AUTOINCREMENT</span>,</span>
+<span class="code-line">    device_type <span class="code-string">TEXT NOT NULL</span>,</span>
+<span class="code-line">    mac_address <span class="code-string">TEXT</span>,</span>
+<span class="code-line">    rssi <span class="code-string">INTEGER NOT NULL</span>,</span>
+<span class="code-line">    confidence <span class="code-string">REAL NOT NULL</span>,</span>
+<span class="code-line">    latitude <span class="code-string">REAL NOT NULL</span>,</span>
+<span class="code-line">    longitude <span class="code-string">REAL NOT NULL</span>,</span>
+<span class="code-line">    speed <span class="code-string">REAL</span>,</span>
+<span class="code-line">    timestamp <span class="code-string">TEXT NOT NULL</span>,</span>
+<span class="code-line">    synced <span class="code-string">INTEGER DEFAULT 0</span></span>
+<span class="code-line">);</span>
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Create the &quot;detections&quot; table if it doesn&apos;t already exist (safe to run on every app launch).</p>
+              <p class="tl">Auto-incrementing unique number for each detection — ID 1, 2, 3, etc. Never reused.</p>
+              <p class="tl">The camera brand name — required, can&apos;t be empty. "Flock Safety", "Ring", etc.</p>
+              <p class="tl">Hardware MAC address — optional (may not always be available).</p>
+              <p class="tl">Signal strength — required integer (like -55 or -80).</p>
+              <p class="tl">Confidence score — required decimal number (like 0.95).</p>
+              <p class="tl">GPS latitude — required decimal (like 37.7749).</p>
+              <p class="tl">GPS longitude — required decimal (like -122.4194).</p>
+              <p class="tl">Speed in m/s — optional, in case GPS isn&apos;t tracking motion.</p>
+              <p class="tl">When this happened, as an ISO-8601 date string — required.</p>
+              <p class="tl">Has this been backed up to iCloud? 0 = no, 1 = yes. Defaults to 0.</p>
+              <p class="tl">End of table definition.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: Database Indexes -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Speed Tricks: Database Indexes</h2>
+        <p>Imagine searching all 2,000 books in a library by hand every time you want to find one. Or — using the card catalog, which is sorted alphabetically and tells you exactly which shelf to go to.</p>
+        <p>A database <span class="term" data-definition="A database index is a sorted lookup table that makes certain queries fast. Without an index, the database reads every row. With an index on 'timestamp', it jumps directly to the right rows. The tradeoff: indexes take up extra disk space.">index</span> is that card catalog. FlockFinder creates four of them:</p>
+
+        <div class="badge-list animate-in">
+          <div class="badge-item">
+            <span class="badge-code">idx_timestamp</span>
+            <span class="badge-desc">Makes "show me detections from the last week" instant instead of scanning every row.</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">idx_device_type</span>
+            <span class="badge-desc">Makes "filter by Flock Safety only" fast — used on the map and history views.</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">idx_synced</span>
+            <span class="badge-desc">Makes "find all unsynced detections for iCloud backup" fast without touching already-synced rows.</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">idx_location</span>
+            <span class="badge-desc">Makes map viewport queries fast — "find all cameras within this bounding box" uses lat/lng together.</span>
+          </div>
+        </div>
+
+        <div class="callout callout-accent animate-in">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">When to Ask AI to Add an Index</strong>
+            <p>If your app ever shows a list that gets progressively slower as data grows, ask AI: "add a database index on [the column I filter by]." You&apos;ll hear engineers call slow unindexed queries a <span class="term" data-definition="A full table scan means the database looked at every single row to find the answer. For 100 rows it&apos;s fine. For 100,000 rows it becomes very slow.">full table scan</span> — a classic performance gotcha in mobile apps.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: Group Chat — Saving a detection -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">What Happens When Data Is Saved</h2>
+        <p>Follow the exact conversation between the Coordinator and DatabaseManager as a detection gets persisted. This is the &quot;filing&quot; part of the filing system.</p>
+
+        <div class="chat-window" id="chat-module4">
+          <div class="chat-messages">
+
+            <div class="chat-message" data-msg="0" data-sender="coord" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-accent)">CO</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-accent)">DetectionCoordinator</span>
+                <p>DatabaseManager — I have a complete FlockDetection object. Device: Flock Safety, MAC: AA:BB:CC, lat: 37.77, lng: -122.41, confidence: 0.95. Please save it.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="1" data-sender="db" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">DB</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-3)">DatabaseManager</span>
+                <p>Got it. Preparing an INSERT SQL statement. I&apos;ll use prepared statements to bind each field safely — prevents SQL injection.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="2" data-sender="db" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">DB</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-3)">DatabaseManager</span>
+                <p>INSERT complete. Auto-assigned ID: 1042. I&apos;ve set synced=0 so the iCloud system knows this needs to be backed up.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="3" data-sender="icloud" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-4)">☁️</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-4)">iCloudManager</span>
+                <p>I&apos;ll check if an hour has passed since the last backup. If so, I&apos;ll export all rows where synced=0 and upload to iCloud, then mark them synced=1.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="4" data-sender="db" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">DB</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-3)">DatabaseManager</span>
+                <p>When the map or history view needs data, they&apos;ll call my fetchAllDetections() method. I&apos;ll run SELECT * FROM detections ORDER BY timestamp DESC and return the list.</p>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="chat-typing" id="chat-module4-typing" style="display:none">
+            <div class="chat-avatar" id="chat-module4-typing-avatar">?</div>
+            <div class="chat-typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+
+          <div class="chat-controls">
+            <button type="button" class="btn chat-next-btn">Next Message</button>
+            <button type="button" class="btn chat-all-btn">Play All</button>
+            <button type="button" class="btn chat-reset-btn">Replay</button>
+            <span class="chat-progress"></span>
+          </div>
+        </div>
+
+        <div class="callout callout-info animate-in">
+          <div class="callout-icon">🛡️</div>
+          <div class="callout-content">
+            <strong class="callout-title">Prepared Statements: The Security Guard</strong>
+            <p>Notice DatabaseManager uses <span class="term" data-definition="A prepared statement is a SQL template with placeholders (?) instead of real values. The database fills them in safely. This prevents SQL Injection — a classic attack where malicious input tricks the database into running unintended commands.">prepared statements</span> with <code>sqlite3_bind_text()</code> instead of building SQL strings by hand. This is one of the OWASP Top 10 security practices — never put user-provided strings directly into a SQL query.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: Quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Apply What You Know</h2>
+
+        <div class="quiz-container" id="quiz-module4">
+
+          <div class="quiz-question-block"
+               data-correct="option-b"
+               data-explanation-right="Exactly — you would tell AI: add a column called &apos;notes&apos; (TEXT, nullable) to the detections table and update the INSERT statement. You also need to handle the case where old rows don&apos;t have this column — that&apos;s called a database migration."
+               data-explanation-wrong="A new piece of data for each detection would live as a new column in the detections table. You would modify DatabaseManager.swift — specifically the CREATE TABLE statement and the INSERT statement. You&apos;d also update the FlockDetection model.">
+            <h3 class="quiz-question">You want to add a &quot;notes&quot; field so users can type a short note for each detection (like "construction cam near park"). Which files would you instruct an AI agent to modify?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>BLEManager.swift — it&apos;s where detection data originates</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>DatabaseManager.swift (add the column) and FlockDetection.swift (add the property to the model)</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Only ContentView.swift — the UI needs a text field for the note</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-a"
+               data-explanation-right="Correct — the synced column is how DatabaseManager and iCloudManager coordinate without talking to each other directly. DatabaseManager sets synced=0 on save; iCloudManager reads rows where synced=0, backs them up, then sets synced=1. It&apos;s a simple but elegant handoff mechanism."
+               data-explanation-wrong="Look at the schema. The synced column is an integer that starts at 0. Think about what would use that flag and why the database itself needs to track that state.">
+            <h3 class="quiz-question">The <code>synced</code> column in the database starts at 0. What is its purpose, and which component changes it to 1?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>iCloudManager sets it to 1 after successfully backing up that detection — so it knows what still needs uploading</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The user manually marks detections as "reviewed" by tapping a checkbox in the history view</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The ESP32 hardware sets it to 1 to confirm it received an acknowledgment</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button type="button" class="quiz-check-btn" onclick="checkQuiz('quiz-module4')">Check Answers</button>
+          <button type="button" class="quiz-reset-btn" onclick="resetQuiz('quiz-module4')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

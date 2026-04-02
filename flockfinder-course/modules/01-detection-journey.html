@@ -1,0 +1,225 @@
+<section class="module" id="module-1" style="background: var(--color-bg)">
+  <div class="module-content">
+
+    <header class="module-header animate-in">
+      <span class="module-number">01</span>
+      <h1 class="module-title">The Secret Life of a Detection</h1>
+      <p class="module-subtitle">What FlockFinder actually does — and the journey your data takes in the half-second after a camera is found.</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- SCREEN 1: What is FlockFinder? -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">What Is This App, Really?</h2>
+        <p>Imagine you're driving around your neighborhood with a small electronic box plugged into your car. That box is constantly sniffing the air for <span class="term" data-definition="Wi-Fi is the wireless network signal your phone uses to connect to the internet. Surveillance cameras often broadcast a Wi-Fi signal with a recognizable name — that's what the FlockFinder hardware detects.">Wi-Fi signals</span>, looking for patterns that match known surveillance cameras — particularly <strong>Flock Safety</strong> cameras, which are <span class="term" data-definition="ALPR stands for Automatic License Plate Reader. These are roadside cameras that photograph every passing car and record the license plate, time, and location. Police departments use them to track vehicle movements.">ALPR</span> cameras used to photograph license plates.</p>
+        <p>When that box finds one, it beams a message to your iPhone over <span class="term" data-definition="Bluetooth Low Energy — a short-range wireless protocol designed for devices that need to send small amounts of data while using as little battery as possible. Your headphones, fitness trackers, and AirPods all use BLE.">Bluetooth</span>. Your phone lights up, plays an alert, records the GPS coordinates, and saves everything to a private database that only you can see.</p>
+
+        <div class="pattern-cards stagger-children">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-accent-light); font-size:1.4rem">📡</div>
+            <h4 class="pattern-title">The Hardware</h4>
+            <p class="pattern-desc">A <span class="term" data-definition="ESP32-S3 is a tiny, cheap microcontroller chip made by Espressif. It has built-in Wi-Fi and Bluetooth, making it ideal for wireless sensing projects.">ESP32-S3</span> FeatherS3 device scans Wi-Fi signals and broadcasts detections over BLE.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-info-light); font-size:1.4rem">📱</div>
+            <h4 class="pattern-title">The App</h4>
+            <p class="pattern-desc">This iOS app is the companion that receives detections, logs GPS location, and stores everything locally.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-accent-light); font-size:1.4rem">🗺️</div>
+            <h4 class="pattern-title">The Map</h4>
+            <p class="pattern-desc">Every detection appears as a point on your personal map — building a local picture of surveillance infrastructure.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: The Full Journey Animation -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Step Through a Detection</h2>
+        <p>A camera is detected. What happens next? Click through each step to follow the data — from the antenna on your hardware all the way to the map pin on your iPhone.</p>
+
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"Step 1: The ESP32 hardware detects a Flock Safety camera Wi-Fi signal while scanning."},
+          {"highlight":"flow-actor-1","label":"Step 2: The ESP32 packages the camera info (type, MAC address, signal strength) into a JSON message.","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"Step 3: BLEManager on your iPhone receives the notification and parses the JSON data."},
+          {"highlight":"flow-actor-2","label":"Step 4: BLEManager fires a callback — essentially shouting &quot;Hey, I found something!&quot; to the rest of the app.","packet":true,"from":"actor-2","to":"actor-3"},
+          {"highlight":"flow-actor-3","label":"Step 5: DetectionCoordinator wakes up. It asks LocationManager for the current GPS coordinates.","packet":true,"from":"actor-3","to":"actor-4"},
+          {"highlight":"flow-actor-4","label":"Step 6: LocationManager hands back the precise latitude, longitude, speed, and heading.","packet":true,"from":"actor-4","to":"actor-3"},
+          {"highlight":"flow-actor-3","label":"Step 7: DetectionCoordinator bundles everything — camera data + GPS + motion — into a FlockDetection record.","packet":true,"from":"actor-3","to":"actor-5"},
+          {"highlight":"flow-actor-5","label":"Step 8: DatabaseManager saves the record to the local SQLite database on the device."},
+          {"highlight":"flow-actor-3","label":"Step 9: The audio alert fires, haptic feedback buzzes, and the map updates with the new pin. Done!"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">📡</div>
+              <span>ESP32<br>Hardware</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">📶</div>
+              <span>BLE<br>Manager</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-3">
+              <div class="flow-actor-icon">🎯</div>
+              <span>Detection<br>Coordinator</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-4">
+              <div class="flow-actor-icon">📍</div>
+              <span>Location<br>Manager</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-5">
+              <div class="flow-actor-icon">💾</div>
+              <span>Database<br>Manager</span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">Click "Next Step" to begin</div>
+          <div class="flow-controls">
+            <button type="button" class="btn flow-next-btn">Next Step</button>
+            <button type="button" class="btn flow-reset-btn">Restart</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: The Code That Orchestrates It All -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Orchestration Code</h2>
+        <p>Every time the BLE hardware sends a detection, this function runs. It's the conductor — reading from one source and directing all the others.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-line"><span class="code-keyword">private func</span> <span class="code-function">handleDetection</span>(<span class="code-property">_ bleData</span>: BLEManager.DetectionData) {</span>
+<span class="code-line">    <span class="code-keyword">let</span> locationData = locationManager.<span class="code-function">getLocationData</span>()</span>
+<span class="code-line">    <span class="code-keyword">let</span> detection = <span class="code-function">FlockDetection</span>(bleData: bleData, location: locationData)</span>
+<span class="code-line">    <span class="code-keyword">guard</span> detection.confidence >= appSettings.minimumConfidence <span class="code-keyword">else</span> { <span class="code-keyword">return</span> }</span>
+<span class="code-line">    databaseManager.<span class="code-function">insertDetection</span>(detection)</span>
+<span class="code-line">    <span class="code-keyword">if</span> appSettings.audibleAlertsEnabled {</span>
+<span class="code-line">        audioManager.<span class="code-function">playDetectionAlert</span>()</span>
+<span class="code-line">    }</span>
+<span class="code-line">}</span>
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">When a detection arrives from Bluetooth, run this function...</p>
+              <p class="tl">Ask the GPS system for the current location right now.</p>
+              <p class="tl">Combine the camera data with the GPS data into one complete record.</p>
+              <p class="tl">If the detection's confidence score is too low, ignore it and stop here.</p>
+              <p class="tl">Save the full record to the database.</p>
+              <p class="tl">If the user has sound alerts turned on...</p>
+              <p class="tl">...play the detection sound.</p>
+              <p class="tl">Close the if-block.</p>
+              <p class="tl">End of function.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent animate-in">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">The Coordinator Pattern</strong>
+            <p>Notice how <code>handleDetection</code> doesn't do any of the work itself — it just calls other managers. This is a famous software pattern called the <span class="term" data-definition="The Coordinator (or Orchestrator) pattern delegates all the actual work to specialist objects, keeping itself thin and testable. The coordinator knows the workflow, but the managers know the details.">Coordinator pattern</span>. When you ask an AI to &quot;add a feature when a detection happens,&quot; this is the exact function to tell it to modify.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: What Data Is Recorded -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">What Gets Saved for Every Detection</h2>
+        <p>A single detection is far more than just "camera found here." It's a rich snapshot of your environment at that exact moment.</p>
+
+        <div class="icon-rows stagger-children">
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-1); color:white">📸</div>
+            <div>
+              <strong>Camera Identity</strong>
+              <p>Device type (Flock Safety, Ring, Nest…), <span class="term" data-definition="A MAC address is a unique hardware ID burned into every network device at the factory — like a serial number for Wi-Fi cards. It never changes unless spoofed.">MAC address</span>, and <span class="term" data-definition="SSID is the name a Wi-Fi network broadcasts — the name you see in your phone's Wi-Fi list. Flock Safety cameras broadcast recognizable SSID patterns.">Wi-Fi SSID</span>.</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-2); color:white">📍</div>
+            <div>
+              <strong>Location</strong>
+              <p>Latitude, longitude, altitude, and GPS accuracy — precise enough to place a map pin within a few meters.</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-3); color:white">🚗</div>
+            <div>
+              <strong>Motion Context</strong>
+              <p>Speed in mph, compass heading, and activity type (walking, driving, cycling) from the motion sensor.</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-4); color:white">📊</div>
+            <div>
+              <strong>Signal Strength &amp; Confidence</strong>
+              <p><span class="term" data-definition="RSSI (Received Signal Strength Indicator) measures how strong a wireless signal is at the receiver — higher (less negative) numbers mean stronger signal. -55 dBm is strong; -90 dBm is weak.">RSSI</span> in dBm and a confidence score (0–1) estimating how certain the detection is.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: Quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Check Your Understanding</h2>
+        <p>Apply what you just learned to a new scenario.</p>
+
+        <div class="quiz-container" id="quiz-module1">
+
+          <div class="quiz-question-block"
+               data-correct="option-b"
+               data-explanation-right="Exactly — DetectionCoordinator is the orchestrator. It receives the raw BLE data, calls LocationManager for GPS, builds the complete record, and hands it to DatabaseManager. It coordinates the others without doing their specialized work."
+               data-explanation-wrong="Think about which component receives the raw BLE callback, then calls all the others. One file is designed specifically to coordinate the workflow between specialists.">
+            <h3 class="quiz-question">You want to add a feature: when a camera is detected, also send a push notification. Which file would you tell an AI agent to modify?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>BLEManager.swift — it receives the detection first</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>DetectionCoordinator.swift — it orchestrates everything that happens on detection</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>DatabaseManager.swift — detections are saved there</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-c"
+               data-explanation-right="Right — a low confidence score means the hardware isn't sure what it detected. The guard statement acts like a filter: if confidence is below the threshold, the function exits immediately without saving or alerting."
+               data-explanation-wrong="Look at the guard statement in the code. It checks a minimum confidence setting before doing anything else. What happens when that check fails?">
+            <h3 class="quiz-question">A user reports they're getting false alerts for Ring doorbells they don't care about. The fix would be to raise the minimum confidence threshold. Looking at the code, what happens to a detection that falls below that threshold?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>It gets saved to the database but not shown in the map</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>It plays a different, quieter alert sound</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The function exits immediately — nothing is saved or alerted</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button type="button" class="quiz-check-btn" onclick="checkQuiz('quiz-module1')">Check Answers</button>
+          <button type="button" class="quiz-reset-btn" onclick="resetQuiz('quiz-module1')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

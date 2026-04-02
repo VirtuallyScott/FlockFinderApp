@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlockFinder: How It Works</title>
+
+  <!-- Google Fonts: Bricolage Grotesque · DM Sans · JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Teal accent — radar/recon aesthetic fits the surveillance cam detection theme -->
+  <style>
+    :root {
+      --color-accent:       #2A7B9B;
+      --color-accent-hover: #1F6280;
+      --color-accent-light: #E4F2F7;
+      --color-accent-muted: #5A9DB8;
+    }
+  </style>
+
+  <script src="main.js" defer></script>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+    <div class="nav-inner">
+      <span class="nav-title">FlockFinder: How It Works</span>
+      <div class="nav-dots" id="nav-dots" role="tablist">
+        <button class="nav-dot" data-target="module-1" data-tooltip="The Secret Life of a Detection" role="tab" aria-label="Module 1: The Secret Life of a Detection"></button>
+        <button class="nav-dot" data-target="module-2" data-tooltip="Meet the Cast" role="tab" aria-label="Module 2: Meet the Cast"></button>
+        <button class="nav-dot" data-target="module-3" data-tooltip="Speaking Bluetooth" role="tab" aria-label="Module 3: Speaking Bluetooth"></button>
+        <button class="nav-dot" data-target="module-4" data-tooltip="The Filing System" role="tab" aria-label="Module 4: The Filing System"></button>
+        <button class="nav-dot" data-target="module-5" data-tooltip="Permission Granted" role="tab" aria-label="Module 5: Permission Granted"></button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <!-- modules/*.html content is assembled here by build.sh -->
+<section class="module" id="module-1" style="background: var(--color-bg)">
+  <div class="module-content">
+
+    <header class="module-header animate-in">
+      <span class="module-number">01</span>
+      <h1 class="module-title">The Secret Life of a Detection</h1>
+      <p class="module-subtitle">What FlockFinder actually does — and the journey your data takes in the half-second after a camera is found.</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- SCREEN 1: What is FlockFinder? -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">What Is This App, Really?</h2>
+        <p>Imagine you're driving around your neighborhood with a small electronic box plugged into your car. That box is constantly sniffing the air for <span class="term" data-definition="Wi-Fi is the wireless network signal your phone uses to connect to the internet. Surveillance cameras often broadcast a Wi-Fi signal with a recognizable name — that's what the FlockFinder hardware detects.">Wi-Fi signals</span>, looking for patterns that match known surveillance cameras — particularly <strong>Flock Safety</strong> cameras, which are <span class="term" data-definition="ALPR stands for Automatic License Plate Reader. These are roadside cameras that photograph every passing car and record the license plate, time, and location. Police departments use them to track vehicle movements.">ALPR</span> cameras used to photograph license plates.</p>
+        <p>When that box finds one, it beams a message to your iPhone over <span class="term" data-definition="Bluetooth Low Energy — a short-range wireless protocol designed for devices that need to send small amounts of data while using as little battery as possible. Your headphones, fitness trackers, and AirPods all use BLE.">Bluetooth</span>. Your phone lights up, plays an alert, records the GPS coordinates, and saves everything to a private database that only you can see.</p>
+
+        <div class="pattern-cards stagger-children">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-accent-light); font-size:1.4rem">📡</div>
+            <h4 class="pattern-title">The Hardware</h4>
+            <p class="pattern-desc">A <span class="term" data-definition="ESP32-S3 is a tiny, cheap microcontroller chip made by Espressif. It has built-in Wi-Fi and Bluetooth, making it ideal for wireless sensing projects.">ESP32-S3</span> FeatherS3 device scans Wi-Fi signals and broadcasts detections over BLE.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-info-light); font-size:1.4rem">📱</div>
+            <h4 class="pattern-title">The App</h4>
+            <p class="pattern-desc">This iOS app is the companion that receives detections, logs GPS location, and stores everything locally.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-accent-light); font-size:1.4rem">🗺️</div>
+            <h4 class="pattern-title">The Map</h4>
+            <p class="pattern-desc">Every detection appears as a point on your personal map — building a local picture of surveillance infrastructure.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: The Full Journey Animation -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Step Through a Detection</h2>
+        <p>A camera is detected. What happens next? Click through each step to follow the data — from the antenna on your hardware all the way to the map pin on your iPhone.</p>
+
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"Step 1: The ESP32 hardware detects a Flock Safety camera Wi-Fi signal while scanning."},
+          {"highlight":"flow-actor-1","label":"Step 2: The ESP32 packages the camera info (type, MAC address, signal strength) into a JSON message.","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"Step 3: BLEManager on your iPhone receives the notification and parses the JSON data."},
+          {"highlight":"flow-actor-2","label":"Step 4: BLEManager fires a callback — essentially shouting &quot;Hey, I found something!&quot; to the rest of the app.","packet":true,"from":"actor-2","to":"actor-3"},
+          {"highlight":"flow-actor-3","label":"Step 5: DetectionCoordinator wakes up. It asks LocationManager for the current GPS coordinates.","packet":true,"from":"actor-3","to":"actor-4"},
+          {"highlight":"flow-actor-4","label":"Step 6: LocationManager hands back the precise latitude, longitude, speed, and heading.","packet":true,"from":"actor-4","to":"actor-3"},
+          {"highlight":"flow-actor-3","label":"Step 7: DetectionCoordinator bundles everything — camera data + GPS + motion — into a FlockDetection record.","packet":true,"from":"actor-3","to":"actor-5"},
+          {"highlight":"flow-actor-5","label":"Step 8: DatabaseManager saves the record to the local SQLite database on the device."},
+          {"highlight":"flow-actor-3","label":"Step 9: The audio alert fires, haptic feedback buzzes, and the map updates with the new pin. Done!"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">📡</div>
+              <span>ESP32<br>Hardware</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">📶</div>
+              <span>BLE<br>Manager</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-3">
+              <div class="flow-actor-icon">🎯</div>
+              <span>Detection<br>Coordinator</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-4">
+              <div class="flow-actor-icon">📍</div>
+              <span>Location<br>Manager</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-5">
+              <div class="flow-actor-icon">💾</div>
+              <span>Database<br>Manager</span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">Click "Next Step" to begin</div>
+          <div class="flow-controls">
+            <button type="button" class="btn flow-next-btn">Next Step</button>
+            <button type="button" class="btn flow-reset-btn">Restart</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: The Code That Orchestrates It All -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Orchestration Code</h2>
+        <p>Every time the BLE hardware sends a detection, this function runs. It's the conductor — reading from one source and directing all the others.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-line"><span class="code-keyword">private func</span> <span class="code-function">handleDetection</span>(<span class="code-property">_ bleData</span>: BLEManager.DetectionData) {</span>
+<span class="code-line">    <span class="code-keyword">let</span> locationData = locationManager.<span class="code-function">getLocationData</span>()</span>
+<span class="code-line">    <span class="code-keyword">let</span> detection = <span class="code-function">FlockDetection</span>(bleData: bleData, location: locationData)</span>
+<span class="code-line">    <span class="code-keyword">guard</span> detection.confidence >= appSettings.minimumConfidence <span class="code-keyword">else</span> { <span class="code-keyword">return</span> }</span>
+<span class="code-line">    databaseManager.<span class="code-function">insertDetection</span>(detection)</span>
+<span class="code-line">    <span class="code-keyword">if</span> appSettings.audibleAlertsEnabled {</span>
+<span class="code-line">        audioManager.<span class="code-function">playDetectionAlert</span>()</span>
+<span class="code-line">    }</span>
+<span class="code-line">}</span>
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">When a detection arrives from Bluetooth, run this function...</p>
+              <p class="tl">Ask the GPS system for the current location right now.</p>
+              <p class="tl">Combine the camera data with the GPS data into one complete record.</p>
+              <p class="tl">If the detection's confidence score is too low, ignore it and stop here.</p>
+              <p class="tl">Save the full record to the database.</p>
+              <p class="tl">If the user has sound alerts turned on...</p>
+              <p class="tl">...play the detection sound.</p>
+              <p class="tl">Close the if-block.</p>
+              <p class="tl">End of function.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent animate-in">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">The Coordinator Pattern</strong>
+            <p>Notice how <code>handleDetection</code> doesn't do any of the work itself — it just calls other managers. This is a famous software pattern called the <span class="term" data-definition="The Coordinator (or Orchestrator) pattern delegates all the actual work to specialist objects, keeping itself thin and testable. The coordinator knows the workflow, but the managers know the details.">Coordinator pattern</span>. When you ask an AI to &quot;add a feature when a detection happens,&quot; this is the exact function to tell it to modify.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: What Data Is Recorded -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">What Gets Saved for Every Detection</h2>
+        <p>A single detection is far more than just "camera found here." It's a rich snapshot of your environment at that exact moment.</p>
+
+        <div class="icon-rows stagger-children">
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-1); color:white">📸</div>
+            <div>
+              <strong>Camera Identity</strong>
+              <p>Device type (Flock Safety, Ring, Nest…), <span class="term" data-definition="A MAC address is a unique hardware ID burned into every network device at the factory — like a serial number for Wi-Fi cards. It never changes unless spoofed.">MAC address</span>, and <span class="term" data-definition="SSID is the name a Wi-Fi network broadcasts — the name you see in your phone's Wi-Fi list. Flock Safety cameras broadcast recognizable SSID patterns.">Wi-Fi SSID</span>.</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-2); color:white">📍</div>
+            <div>
+              <strong>Location</strong>
+              <p>Latitude, longitude, altitude, and GPS accuracy — precise enough to place a map pin within a few meters.</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-3); color:white">🚗</div>
+            <div>
+              <strong>Motion Context</strong>
+              <p>Speed in mph, compass heading, and activity type (walking, driving, cycling) from the motion sensor.</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-4); color:white">📊</div>
+            <div>
+              <strong>Signal Strength &amp; Confidence</strong>
+              <p><span class="term" data-definition="RSSI (Received Signal Strength Indicator) measures how strong a wireless signal is at the receiver — higher (less negative) numbers mean stronger signal. -55 dBm is strong; -90 dBm is weak.">RSSI</span> in dBm and a confidence score (0–1) estimating how certain the detection is.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: Quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Check Your Understanding</h2>
+        <p>Apply what you just learned to a new scenario.</p>
+
+        <div class="quiz-container" id="quiz-module1">
+
+          <div class="quiz-question-block"
+               data-correct="option-b"
+               data-explanation-right="Exactly — DetectionCoordinator is the orchestrator. It receives the raw BLE data, calls LocationManager for GPS, builds the complete record, and hands it to DatabaseManager. It coordinates the others without doing their specialized work."
+               data-explanation-wrong="Think about which component receives the raw BLE callback, then calls all the others. One file is designed specifically to coordinate the workflow between specialists.">
+            <h3 class="quiz-question">You want to add a feature: when a camera is detected, also send a push notification. Which file would you tell an AI agent to modify?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>BLEManager.swift — it receives the detection first</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>DetectionCoordinator.swift — it orchestrates everything that happens on detection</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>DatabaseManager.swift — detections are saved there</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-c"
+               data-explanation-right="Right — a low confidence score means the hardware isn't sure what it detected. The guard statement acts like a filter: if confidence is below the threshold, the function exits immediately without saving or alerting."
+               data-explanation-wrong="Look at the guard statement in the code. It checks a minimum confidence setting before doing anything else. What happens when that check fails?">
+            <h3 class="quiz-question">A user reports they're getting false alerts for Ring doorbells they don't care about. The fix would be to raise the minimum confidence threshold. Looking at the code, what happens to a detection that falls below that threshold?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>It gets saved to the database but not shown in the map</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>It plays a different, quieter alert sound</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The function exits immediately — nothing is saved or alerted</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button type="button" class="quiz-check-btn" onclick="checkQuiz('quiz-module1')">Check Answers</button>
+          <button type="button" class="quiz-reset-btn" onclick="resetQuiz('quiz-module1')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+<section class="module" id="module-2" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+
+    <header class="module-header animate-in">
+      <span class="module-number">02</span>
+      <h1 class="module-title">Meet the Cast</h1>
+      <p class="module-subtitle">Five specialist managers and one coordinator — each with a single job, each talking to the others through a careful chain of command.</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- SCREEN 1: The Crew -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Team Behind Every Detection</h2>
+        <p>Think of FlockFinder's app like a <strong>submarine crew</strong> — every person has one role, no one does someone else's job, and the captain coordinates them all without physically pulling the levers. If one person is asleep, the whole mission fails.</p>
+        <p>In code, each crew member is a <span class="term" data-definition="A class is a blueprint for creating objects. It bundles together data (properties) and actions (functions) related to one specific role. You can make many copies of a class — each copy is called an instance.">class</span> called a <strong>Manager</strong>. Here's the full roster:</p>
+
+        <div class="pattern-cards stagger-children">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-accent-light); color: var(--color-actor-1)">📶</div>
+            <h4 class="pattern-title">BLEManager</h4>
+            <p class="pattern-desc">The Radio Operator. Speaks Bluetooth to the ESP32 hardware. Scans, connects, and receives detection messages.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-info-light); color: var(--color-actor-2)">📍</div>
+            <h4 class="pattern-title">LocationManager</h4>
+            <p class="pattern-desc">The Navigator. Tracks your GPS position, speed, compass heading, and updates whenever you move 5+ meters.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: #EEE8FF; color: var(--color-actor-3)">💾</div>
+            <h4 class="pattern-title">DatabaseManager</h4>
+            <p class="pattern-desc">The Archivist. Writes every detection to the on-device SQLite database, fetches history, handles exports.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: #FDF5E0; color: var(--color-actor-4)">🏃</div>
+            <h4 class="pattern-title">MotionManager</h4>
+            <p class="pattern-desc">The Speedometer. Uses the iPhone's accelerometer to detect if you're walking, driving, or stationary.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-5)">
+            <div class="pattern-icon" style="background: var(--color-success-light); color: var(--color-actor-5)">🔔</div>
+            <h4 class="pattern-title">AudioAlertManager</h4>
+            <p class="pattern-desc">The Alarm. Plays detection sounds and manages the haptic buzz — completely separate from the rest of the logic.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-accent)">
+            <div class="pattern-icon" style="background: var(--color-accent-light); color: var(--color-accent)">🎯</div>
+            <h4 class="pattern-title">DetectionCoordinator</h4>
+            <p class="pattern-desc">The Captain. Knows nobody else's job — just the order things need to happen. Calls all managers in sequence on every detection.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: The File Tree -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Where to Find Each Character</h2>
+        <p>The project folder is organized so each character lives in a logical place. Knowing the map means you can find the right file instantly instead of asking AI to search for it.</p>
+
+        <div class="file-tree animate-in">
+          <div class="ft-folder">
+            <span class="ft-name">FlockFinder/</span>
+            <div class="ft-children">
+              <div class="ft-folder">
+                <span class="ft-name">Managers/</span>
+                <div class="ft-children">
+                  <div class="ft-file"><span class="ft-name">BLEManager.swift</span><span class="ft-desc">— Bluetooth radio operator</span></div>
+                  <div class="ft-file"><span class="ft-name">LocationManager.swift</span><span class="ft-desc">— GPS tracking</span></div>
+                  <div class="ft-file"><span class="ft-name">DatabaseManager.swift</span><span class="ft-desc">— SQLite archivist</span></div>
+                  <div class="ft-file"><span class="ft-name">MotionManager.swift</span><span class="ft-desc">— Accelerometer / activity</span></div>
+                </div>
+              </div>
+              <div class="ft-folder">
+                <span class="ft-name">Views/</span>
+                <div class="ft-children">
+                  <div class="ft-file"><span class="ft-name">DetectionCoordinator.swift</span><span class="ft-desc">— The captain who calls everyone</span></div>
+                  <div class="ft-file"><span class="ft-name">AudioAlertManager.swift</span><span class="ft-desc">— Sound &amp; haptics</span></div>
+                  <div class="ft-file"><span class="ft-name">ContentView.swift</span><span class="ft-desc">— The main 4-tab screen</span></div>
+                </div>
+              </div>
+              <div class="ft-folder">
+                <span class="ft-name">Models/</span>
+                <div class="ft-children">
+                  <div class="ft-file"><span class="ft-name">FlockDetection.swift</span><span class="ft-desc">— The data shape for one detection</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info animate-in">
+          <div class="callout-icon">ℹ️</div>
+          <div class="callout-content">
+            <strong class="callout-title">Why Managers Folder vs Views Folder?</strong>
+            <p>Managers don't draw anything on screen — they just do work. Views draw the UI. DetectionCoordinator and AudioAlertManager ended up in Views/ because they interact with iOS <span class="term" data-definition="UIKit is Apple's older UI framework for iOS, used for things like vibration (haptic) feedback, alert sounds, and push notifications. SwiftUI is the newer one — but some features still require UIKit.">UIKit</span> features like haptics, which blur the line. If you're new to a codebase, don't worry about folder names — just search for the class.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: @Published and ObservableObject -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">How the UI Stays in Sync</h2>
+        <p>Each manager is declared as an <span class="term" data-definition="ObservableObject is a Swift protocol that makes a class 'watchable.' When any @Published property changes, SwiftUI automatically re-renders every view that observes it — no manual refresh needed.">ObservableObject</span>. Their properties are marked <span class="term" data-definition="@Published is a special marker in Swift that says: 'When this value changes, tell everyone who is watching.' It's like subscribing to a news feed — the moment the value updates, all connected views re-draw themselves.">@Published</span>. This is the mechanism that makes your screen update the moment a new detection arrives.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-line"><span class="code-keyword">class</span> <span class="code-function">BLEManager</span>: NSObject, ObservableObject {</span>
+<span class="code-line">    <span class="code-keyword">@Published var</span> isScanning = <span class="code-keyword">false</span></span>
+<span class="code-line">    <span class="code-keyword">@Published var</span> isConnected = <span class="code-keyword">false</span></span>
+<span class="code-line">    <span class="code-keyword">@Published var</span> connectionState: ConnectionState = .disconnected</span>
+<span class="code-line">    <span class="code-keyword">@Published var</span> recentDetections: [FlockDetection] = []</span>
+<span class="code-line">    <span class="code-keyword">@Published var</span> statusMessage: <span class="code-string">String</span> = <span class="code-string">"Ready to scan"</span></span>
+<span class="code-line">}</span>
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Create a class called BLEManager. The "ObservableObject" part means views can watch it for changes.</p>
+              <p class="tl">Watchable: whether we're currently scanning for devices.</p>
+              <p class="tl">Watchable: whether we're connected to the ESP32.</p>
+              <p class="tl">Watchable: a description of the current state (disconnected, scanning, connected, etc).</p>
+              <p class="tl">Watchable: the list of recent detections — when this changes, the map and history update instantly.</p>
+              <p class="tl">Watchable: the status text shown to the user ("Ready to scan", "Found device"...).</p>
+              <p class="tl">End of class definition.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent animate-in">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">The Bulletin Board Metaphor</strong>
+            <p>Think of @Published properties as items pinned to a bulletin board. Any view that "subscribes" to the board automatically sees updates the moment something changes — without anyone manually notifying them. Engineers call this the <span class="term" data-definition="The Observer pattern connects 'publishers' (things that change) to 'subscribers' (things that react to changes) without them needing to know about each other. SwiftUI's @Published/@StateObject is a modern version of this classic pattern.">Observer pattern</span>.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: Group Chat — A detection arrives -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Crew in Action</h2>
+        <p>Watch how the managers talk to each other when a detection comes in. Click "Next Message" to see the conversation unfold.</p>
+
+        <div class="chat-window" id="chat-module2">
+          <div class="chat-messages">
+
+            <div class="chat-message" data-msg="0" data-sender="ble" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-1)">BLE</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-1)">BLEManager</span>
+                <p>Hey Coordinator! Just got a notification from the ESP32. Found a Flock Safety camera. MAC address AA:BB:CC:DD:EE:FF, signal -55 dBm, confidence 0.95.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="1" data-sender="coord" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-accent)">CO</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-accent)">DetectionCoordinator</span>
+                <p>Got it. Confidence is 0.95 — above threshold. LocationManager, what&apos;s our position right now?</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="2" data-sender="loc" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-2)">LOC</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-2)">LocationManager</span>
+                <p>37.7749° N, 122.4194° W. Heading 045°, speed 28 mph, accuracy ±4m.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="3" data-sender="coord" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-accent)">CO</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-accent)">DetectionCoordinator</span>
+                <p>Perfect. Building the full detection record now. DatabaseManager — save this.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="4" data-sender="db" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">DB</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-3)">DatabaseManager</span>
+                <p>Saved. Detection ID: 1042. iCloud backup scheduled.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="5" data-sender="coord" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-accent)">CO</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-accent)">DetectionCoordinator</span>
+                <p>AudioManager — alert please. And BLEManager, add this to your recent detections list so the UI updates.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="6" data-sender="audio" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-5)">AU</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-5)">AudioAlertManager</span>
+                <p>🔊 Played detection alert. Haptic buzz sent.</p>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="chat-typing" id="chat-module2-typing" style="display:none">
+            <div class="chat-avatar" id="chat-module2-typing-avatar">?</div>
+            <div class="chat-typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+
+          <div class="chat-controls">
+            <button type="button" class="btn chat-next-btn">Next Message</button>
+            <button type="button" class="btn chat-all-btn">Play All</button>
+            <button type="button" class="btn chat-reset-btn">Replay</button>
+            <span class="chat-progress"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: Drag and match quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Match Each Manager to Its Job</h2>
+        <p>Drag each manager name to the description that matches what it does — you can drag on mobile too.</p>
+
+        <div class="dnd-container" id="dnd-module2">
+          <div class="dnd-chips">
+            <div class="dnd-chip" draggable="true" data-answer="ble">BLEManager</div>
+            <div class="dnd-chip" draggable="true" data-answer="loc">LocationManager</div>
+            <div class="dnd-chip" draggable="true" data-answer="db">DatabaseManager</div>
+            <div class="dnd-chip" draggable="true" data-answer="coord">DetectionCoordinator</div>
+            <div class="dnd-chip" draggable="true" data-answer="audio">AudioAlertManager</div>
+          </div>
+          <div class="dnd-zones">
+            <div class="dnd-zone" data-correct="coord">
+              <p class="dnd-zone-label">Calls all other managers in order when a detection arrives. Doesn&apos;t do any of the actual work itself.</p>
+              <div class="dnd-zone-target">Drop here</div>
+            </div>
+            <div class="dnd-zone" data-correct="ble">
+              <p class="dnd-zone-label">Connects to the ESP32 hardware over Bluetooth and receives detection notifications.</p>
+              <div class="dnd-zone-target">Drop here</div>
+            </div>
+            <div class="dnd-zone" data-correct="db">
+              <p class="dnd-zone-label">Saves detection records to a local database file and retrieves history for display.</p>
+              <div class="dnd-zone-target">Drop here</div>
+            </div>
+            <div class="dnd-zone" data-correct="loc">
+              <p class="dnd-zone-label">Tracks GPS position, speed, and compass direction using the iPhone&apos;s location hardware.</p>
+              <div class="dnd-zone-target">Drop here</div>
+            </div>
+            <div class="dnd-zone" data-correct="audio">
+              <p class="dnd-zone-label">Plays the detection sound and triggers the haptic buzz in the phone.</p>
+              <div class="dnd-zone-target">Drop here</div>
+            </div>
+          </div>
+          <button type="button" onclick="checkDnD('dnd-module2')" style="margin-top: 1rem; padding: 0.5rem 1.5rem; background: var(--color-accent); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Check Matches</button>
+          <button type="button" onclick="resetDnD('dnd-module2')" style="margin-top: 1rem; margin-left: 0.75rem; padding: 0.5rem 1.5rem; background: white; border: 1px solid var(--color-border); border-radius: 8px; font-weight: 600; cursor: pointer;">Reset</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+<section class="module" id="module-3" style="background: var(--color-bg)">
+  <div class="module-content">
+
+    <header class="module-header animate-in">
+      <span class="module-number">03</span>
+      <h1 class="module-title">Speaking Bluetooth</h1>
+      <p class="module-subtitle">How the ESP32 hardware "talks" to your iPhone — the invisible protocol that delivers every detection across the air.</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- SCREEN 1: What is BLE? -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Bluetooth, but Make It Lean</h2>
+        <p>Classic Bluetooth (in speakers and headphones) streams audio continuously — it's like a running water tap. <span class="term" data-definition="Bluetooth Low Energy (BLE) is a version of Bluetooth designed for devices that send small bursts of data infrequently — heart rate monitors, key trackers, sensors. It uses ~10x less power than classic Bluetooth.">Bluetooth Low Energy (BLE)</span> is more like a postal service — small, precisely addressed packets, only when there's something to say.</p>
+        <p>This is perfect for FlockFinder: the hardware only needs to send a short JSON message when it detects a camera. No need for a constant stream.</p>
+
+        <div class="step-cards animate-in">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>Advertise</strong>
+              <p>The ESP32 broadcasts a BLE advertisement — like holding up a sign that says "FlockFinder-S3 is here." Your iPhone sees it while scanning.</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>Connect</strong>
+              <p>Your iPhone establishes a private BLE connection. It goes from "I see you" to "let&apos;s talk." Only one device can be connected at a time.</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>Discover Services</strong>
+              <p>The iPhone asks: "What can you do?" The ESP32 lists its <span class="term" data-definition="A BLE Service is a logical grouping of related capabilities — like a chapter in a manual. A fitness tracker might have a 'Heart Rate' service and a 'Battery' service.">services</span>. The FlockFinder service contains the detection channel.</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>Subscribe to Notifications</strong>
+              <p>The iPhone subscribes to the detection <span class="term" data-definition="A BLE Characteristic is a specific data slot within a service — like a specific field on a form. It can be readable, writable, or notifiable (meaning it pushes updates to connected devices).">characteristic</span>: "Tell me every time you find something." From now on, the ESP32 pushes detections without being asked.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: UUIDs — The Channel Numbers -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Channel Numbers: UUIDs</h2>
+        <p>In BLE, every service and characteristic gets a unique ID called a <span class="term" data-definition="UUID stands for Universally Unique Identifier — a 128-bit number guaranteed to be unique enough that no two devices will ever accidentally share it. They look like: 4fafc201-1fb5-459e-8fcc-c5c9c331914b.">UUID</span>. Think of it like a radio channel number. Both devices must agree on the exact same numbers — if they don't match, they can't communicate.</p>
+        <p>These UUIDs are hardcoded in the iOS app and must match what's programmed into the ESP32 firmware:</p>
+
+        <div class="badge-list animate-in">
+          <div class="badge-item">
+            <span class="badge-code">4fafc201-…914b</span>
+            <span class="badge-desc"><strong>Service UUID</strong> — the "FlockFinder station" on the BLE radio. Both devices tune to this.</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">beb5483e-…26a8</span>
+            <span class="badge-desc"><strong>Detection Characteristic</strong> — the specific channel that pushes camera detections as notifications (read-only, notify).</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">beb5483e-…26a9</span>
+            <span class="badge-desc"><strong>Command Characteristic</strong> — a writable channel used to send commands back to the ESP32 (e.g., trigger a scan).</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">beb5483e-…26aa</span>
+            <span class="badge-desc"><strong>Stream Characteristic</strong> — a live feed of everything the ESP32 sees, used for the Debug Stream view.</span>
+          </div>
+        </div>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-line"><span class="code-keyword">static let</span> flockServiceUUID =</span>
+<span class="code-line">    <span class="code-function">CBUUID</span>(string: <span class="code-string">"4fafc201-1fb5-459e-8fcc-c5c9c331914b"</span>)</span>
+<span class="code-line"><span class="code-keyword">static let</span> detectionCharacteristicUUID =</span>
+<span class="code-line">    <span class="code-function">CBUUID</span>(string: <span class="code-string">"beb5483e-36e1-4688-b7f5-ea07361b26a8"</span>)</span>
+<span class="code-line"><span class="code-keyword">static let</span> commandCharacteristicUUID =</span>
+<span class="code-line">    <span class="code-function">CBUUID</span>(string: <span class="code-string">"beb5483e-36e1-4688-b7f5-ea07361b26a9"</span>)</span>
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Create a permanent (static) UUID constant for the main FlockFinder service...</p>
+              <p class="tl">...using this exact 128-character ID. If the ESP32 firmware uses a different one, they won&apos;t connect.</p>
+              <p class="tl">Create a UUID for the detection channel (where camera alerts come from)...</p>
+              <p class="tl">...this ends in "a8" — it&apos;s the read/notify characteristic.</p>
+              <p class="tl">Create a UUID for the command channel (where we send instructions to the device)...</p>
+              <p class="tl">...this ends in "a9" — the next sequential ID, a writable characteristic.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: The JSON Message -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Message Format: JSON</h2>
+        <p>When the ESP32 detects a camera, it sends a tiny text message in <span class="term" data-definition="JSON (JavaScript Object Notation) is a text format for structured data. It uses curly braces for objects and colons to assign values. Despite the name, it's used in almost every programming language — Swift, Python, Kotlin, you name it.">JSON</span> format over the detection characteristic. The iOS app parses this JSON into a Swift object.</p>
+        <p>Here&apos;s what a real detection message looks like on the wire:</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">JSON from ESP32</span>
+            <pre><code>
+<span class="code-line">{</span>
+<span class="code-line">  <span class="code-string">"type"</span>: <span class="code-string">"Flock Safety"</span>,</span>
+<span class="code-line">  <span class="code-string">"mac"</span>: <span class="code-string">"AA:BB:CC:DD:EE:FF"</span>,</span>
+<span class="code-line">  <span class="code-string">"ssid"</span>: <span class="code-string">"FLOCK-CAM-001"</span>,</span>
+<span class="code-line">  <span class="code-string">"rssi"</span>: <span class="code-number">-55</span>,</span>
+<span class="code-line">  <span class="code-string">"confidence"</span>: <span class="code-number">0.95</span>,</span>
+<span class="code-line">  <span class="code-string">"ts"</span>: <span class="code-number">123456789</span></span>
+<span class="code-line">}</span>
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Start of the detection data package.</p>
+              <p class="tl">What kind of device: a Flock Safety ALPR camera.</p>
+              <p class="tl">Hardware ID of the camera (unique to this physical device).</p>
+              <p class="tl">The Wi-Fi network name the camera broadcasts — "FLOCK-CAM-001".</p>
+              <p class="tl">Signal strength: -55 dBm (strong — the closer to 0, the stronger).</p>
+              <p class="tl">How sure the ESP32 is that this is a Flock camera: 95% confident.</p>
+              <p class="tl">Timestamp from the ESP32 (seconds since it booted).</p>
+              <p class="tl">End of the package.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info animate-in">
+          <div class="callout-icon">ℹ️</div>
+          <div class="callout-content">
+            <strong class="callout-title">Why Text? Why Not Binary?</strong>
+            <p>JSON is human-readable text, which makes debugging easy — you can literally read the message. The payload is tiny (under 200 bytes) so the minor overhead compared to packed binary doesn&apos;t matter. For FlockFinder&apos;s use case, readability wins over micro-optimization.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: BLE Flow Animation -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The BLE Connection Sequence</h2>
+        <p>From "Bluetooth off" to "notification received" — step through the exact sequence of events the iOS CoreBluetooth framework goes through.</p>
+
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"The iPhone app calls startScanning(). CoreBluetooth begins listening for BLE advertisements nearby."},
+          {"highlight":"flow-actor-2","label":"The ESP32 device broadcasts its advertisement packet — its name and service UUID. iPhone hears it.","packet":true,"from":"actor-2","to":"actor-1"},
+          {"highlight":"flow-actor-1","label":"BLEManager receives the discovered peripheral callback. It checks the device name against known patterns (flockfinder, feather, esp32...)."},
+          {"highlight":"flow-actor-1","label":"Match found! BLEManager calls centralManager.connect() and stops scanning.","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"Connection established. ESP32 is now the peripheral, iPhone is the central. State transitions to .connected."},
+          {"highlight":"flow-actor-1","label":"BLEManager calls discoverServices(). The ESP32 responds with the FlockFinder service.","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"Services discovered. BLEManager then calls discoverCharacteristics() to find the detection, command, and stream channels.","packet":true,"from":"actor-2","to":"actor-1"},
+          {"highlight":"flow-actor-1","label":"BLEManager calls setNotifyValue(true) on the detection characteristic — subscribing to push notifications."},
+          {"highlight":"flow-actor-2","label":"Camera detected! ESP32 sends a JSON notification on the detection characteristic without being asked.","packet":true,"from":"actor-2","to":"actor-1"},
+          {"highlight":"flow-actor-1","label":"didUpdateValueFor fires. BLEManager parses the JSON and calls onDetection(detectionData). Mission complete!"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">📱</div>
+              <span>iPhone<br>BLEManager</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">📡</div>
+              <span>ESP32<br>Hardware</span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">Click "Next Step" to begin</div>
+          <div class="flow-controls">
+            <button type="button" class="btn flow-next-btn">Next Step</button>
+            <button type="button" class="btn flow-reset-btn">Restart</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: Quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Test Your Understanding</h2>
+
+        <div class="quiz-container" id="quiz-module3">
+
+          <div class="quiz-question-block"
+               data-correct="option-c"
+               data-explanation-right="Correct — UUIDs are how devices agree on which channel to use. If either side has a typo or a different UUID, they discover services but nothing matches. The connection succeeds but no data flows."
+               data-explanation-wrong="UUIDs are the channel identifiers, not something that changes with distance or settings. If the app connects successfully but gets no detections, a UUID mismatch is a prime suspect.">
+            <h3 class="quiz-question">Your ESP32 connects to the iOS app but you never receive any detection notifications. The connection state shows "Connected" but the detection characteristic appears empty. What&apos;s the most likely cause?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The device is too far away — BLE range is limited to about 1 meter</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The iOS app needs Location permission to receive BLE data</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The detection characteristic UUID in the app doesn&apos;t match the UUID in the ESP32 firmware</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-a"
+               data-explanation-right="Right — the Command Characteristic (ending ...26a9) is the writable channel. The detection characteristic (...26a8) is read-only/notify — the ESP32 pushes to it, the phone can only listen. To send instructions, you write to the command channel."
+               data-explanation-wrong="Look at the badge list in this module. There are three characteristics: detection (notify), command (write), and stream. Which one is designed for sending messages TO the device?">
+            <h3 class="quiz-question">You want to add a feature to send a &quot;test ping&quot; command from the iPhone to the ESP32. Which characteristic UUID would you write to?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>commandCharacteristicUUID (beb5483e-...26a9) — it was designed for write operations</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>detectionCharacteristicUUID (beb5483e-...26a8) — it&apos;s the main data channel</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>flockServiceUUID — services are the top-level communication channel</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button type="button" class="quiz-check-btn" onclick="checkQuiz('quiz-module3')">Check Answers</button>
+          <button type="button" class="quiz-reset-btn" onclick="resetQuiz('quiz-module3')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+<section class="module" id="module-4" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+
+    <header class="module-header animate-in">
+      <span class="module-number">04</span>
+      <h1 class="module-title">The Filing System</h1>
+      <p class="module-subtitle">How FlockFinder stores thousands of detections permanently — without needing a server, an account, or a Wi-Fi connection.</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- SCREEN 1: What is SQLite? -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Library in Your Pocket</h2>
+        <p>Think of a traditional library: books are organized by category, every book has an entry in the card catalog, and you can ask a librarian to find all books by a certain author, published before a certain year, in under a minute.</p>
+        <p><span class="term" data-definition="SQLite is a self-contained database engine stored as a single file on disk. Unlike most databases, it has no server — the app reads and writes directly to the file. It's built into iOS, Android, macOS, and most other platforms.">SQLite</span> is that library — except it lives in a single file on your iPhone. There's no server, no internet connection needed, no account required. FlockFinder creates a file called <code>flockfinder.sqlite</code> in your phone's private storage the first time it runs.</p>
+
+        <div class="pattern-cards animate-in stagger-children">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-accent-light)">📂</div>
+            <h4 class="pattern-title">It&apos;s Just a File</h4>
+            <p class="pattern-desc">The entire database lives in one <code>.sqlite</code> file on device. Back it up by copying the file. Delete the file and all data is gone.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-info-light)">🔍</div>
+            <h4 class="pattern-title">You Query It with SQL</h4>
+            <p class="pattern-desc"><span class="term" data-definition="SQL (Structured Query Language) is the language used to ask questions of a database. SELECT retrieves data, INSERT adds it, DELETE removes it. It reads almost like English.">SQL</span> lets you ask questions like: &quot;Give me all Flock Safety detections from this week, ordered by time.&quot;</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: #EEE8FF">⚡</div>
+            <h4 class="pattern-title">Built Into iOS</h4>
+            <p class="pattern-desc">Apple ships SQLite3 with every iPhone. FlockFinder uses C-level SQLite3 bindings directly — no third-party library, no extra download.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: The Detection Schema -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">How Detections Are Shaped in the Database</h2>
+        <p>Every piece of data lives in a table — like a spreadsheet. Each <span class="term" data-definition="In a database, a column is one field in a table — like a spreadsheet column. Each row is one record (one detection). The schema defines what columns exist and what type of data each holds.">column</span> in the table stores one piece of information. Here&apos;s the exact schema FlockFinder creates:</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">SQL SCHEMA</span>
+            <pre><code>
+<span class="code-line"><span class="code-keyword">CREATE TABLE IF NOT EXISTS</span> detections (</span>
+<span class="code-line">    id <span class="code-string">INTEGER</span> <span class="code-keyword">PRIMARY KEY AUTOINCREMENT</span>,</span>
+<span class="code-line">    device_type <span class="code-string">TEXT NOT NULL</span>,</span>
+<span class="code-line">    mac_address <span class="code-string">TEXT</span>,</span>
+<span class="code-line">    rssi <span class="code-string">INTEGER NOT NULL</span>,</span>
+<span class="code-line">    confidence <span class="code-string">REAL NOT NULL</span>,</span>
+<span class="code-line">    latitude <span class="code-string">REAL NOT NULL</span>,</span>
+<span class="code-line">    longitude <span class="code-string">REAL NOT NULL</span>,</span>
+<span class="code-line">    speed <span class="code-string">REAL</span>,</span>
+<span class="code-line">    timestamp <span class="code-string">TEXT NOT NULL</span>,</span>
+<span class="code-line">    synced <span class="code-string">INTEGER DEFAULT 0</span></span>
+<span class="code-line">);</span>
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Create the &quot;detections&quot; table if it doesn&apos;t already exist (safe to run on every app launch).</p>
+              <p class="tl">Auto-incrementing unique number for each detection — ID 1, 2, 3, etc. Never reused.</p>
+              <p class="tl">The camera brand name — required, can&apos;t be empty. "Flock Safety", "Ring", etc.</p>
+              <p class="tl">Hardware MAC address — optional (may not always be available).</p>
+              <p class="tl">Signal strength — required integer (like -55 or -80).</p>
+              <p class="tl">Confidence score — required decimal number (like 0.95).</p>
+              <p class="tl">GPS latitude — required decimal (like 37.7749).</p>
+              <p class="tl">GPS longitude — required decimal (like -122.4194).</p>
+              <p class="tl">Speed in m/s — optional, in case GPS isn&apos;t tracking motion.</p>
+              <p class="tl">When this happened, as an ISO-8601 date string — required.</p>
+              <p class="tl">Has this been backed up to iCloud? 0 = no, 1 = yes. Defaults to 0.</p>
+              <p class="tl">End of table definition.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: Database Indexes -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Speed Tricks: Database Indexes</h2>
+        <p>Imagine searching all 2,000 books in a library by hand every time you want to find one. Or — using the card catalog, which is sorted alphabetically and tells you exactly which shelf to go to.</p>
+        <p>A database <span class="term" data-definition="A database index is a sorted lookup table that makes certain queries fast. Without an index, the database reads every row. With an index on 'timestamp', it jumps directly to the right rows. The tradeoff: indexes take up extra disk space.">index</span> is that card catalog. FlockFinder creates four of them:</p>
+
+        <div class="badge-list animate-in">
+          <div class="badge-item">
+            <span class="badge-code">idx_timestamp</span>
+            <span class="badge-desc">Makes "show me detections from the last week" instant instead of scanning every row.</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">idx_device_type</span>
+            <span class="badge-desc">Makes "filter by Flock Safety only" fast — used on the map and history views.</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">idx_synced</span>
+            <span class="badge-desc">Makes "find all unsynced detections for iCloud backup" fast without touching already-synced rows.</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">idx_location</span>
+            <span class="badge-desc">Makes map viewport queries fast — "find all cameras within this bounding box" uses lat/lng together.</span>
+          </div>
+        </div>
+
+        <div class="callout callout-accent animate-in">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">When to Ask AI to Add an Index</strong>
+            <p>If your app ever shows a list that gets progressively slower as data grows, ask AI: "add a database index on [the column I filter by]." You&apos;ll hear engineers call slow unindexed queries a <span class="term" data-definition="A full table scan means the database looked at every single row to find the answer. For 100 rows it&apos;s fine. For 100,000 rows it becomes very slow.">full table scan</span> — a classic performance gotcha in mobile apps.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: Group Chat — Saving a detection -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">What Happens When Data Is Saved</h2>
+        <p>Follow the exact conversation between the Coordinator and DatabaseManager as a detection gets persisted. This is the &quot;filing&quot; part of the filing system.</p>
+
+        <div class="chat-window" id="chat-module4">
+          <div class="chat-messages">
+
+            <div class="chat-message" data-msg="0" data-sender="coord" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-accent)">CO</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-accent)">DetectionCoordinator</span>
+                <p>DatabaseManager — I have a complete FlockDetection object. Device: Flock Safety, MAC: AA:BB:CC, lat: 37.77, lng: -122.41, confidence: 0.95. Please save it.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="1" data-sender="db" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">DB</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-3)">DatabaseManager</span>
+                <p>Got it. Preparing an INSERT SQL statement. I&apos;ll use prepared statements to bind each field safely — prevents SQL injection.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="2" data-sender="db" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">DB</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-3)">DatabaseManager</span>
+                <p>INSERT complete. Auto-assigned ID: 1042. I&apos;ve set synced=0 so the iCloud system knows this needs to be backed up.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="3" data-sender="icloud" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-4)">☁️</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-4)">iCloudManager</span>
+                <p>I&apos;ll check if an hour has passed since the last backup. If so, I&apos;ll export all rows where synced=0 and upload to iCloud, then mark them synced=1.</p>
+              </div>
+            </div>
+
+            <div class="chat-message" data-msg="4" data-sender="db" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">DB</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-3)">DatabaseManager</span>
+                <p>When the map or history view needs data, they&apos;ll call my fetchAllDetections() method. I&apos;ll run SELECT * FROM detections ORDER BY timestamp DESC and return the list.</p>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="chat-typing" id="chat-module4-typing" style="display:none">
+            <div class="chat-avatar" id="chat-module4-typing-avatar">?</div>
+            <div class="chat-typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+
+          <div class="chat-controls">
+            <button type="button" class="btn chat-next-btn">Next Message</button>
+            <button type="button" class="btn chat-all-btn">Play All</button>
+            <button type="button" class="btn chat-reset-btn">Replay</button>
+            <span class="chat-progress"></span>
+          </div>
+        </div>
+
+        <div class="callout callout-info animate-in">
+          <div class="callout-icon">🛡️</div>
+          <div class="callout-content">
+            <strong class="callout-title">Prepared Statements: The Security Guard</strong>
+            <p>Notice DatabaseManager uses <span class="term" data-definition="A prepared statement is a SQL template with placeholders (?) instead of real values. The database fills them in safely. This prevents SQL Injection — a classic attack where malicious input tricks the database into running unintended commands.">prepared statements</span> with <code>sqlite3_bind_text()</code> instead of building SQL strings by hand. This is one of the OWASP Top 10 security practices — never put user-provided strings directly into a SQL query.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: Quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Apply What You Know</h2>
+
+        <div class="quiz-container" id="quiz-module4">
+
+          <div class="quiz-question-block"
+               data-correct="option-b"
+               data-explanation-right="Exactly — you would tell AI: add a column called &apos;notes&apos; (TEXT, nullable) to the detections table and update the INSERT statement. You also need to handle the case where old rows don&apos;t have this column — that&apos;s called a database migration."
+               data-explanation-wrong="A new piece of data for each detection would live as a new column in the detections table. You would modify DatabaseManager.swift — specifically the CREATE TABLE statement and the INSERT statement. You&apos;d also update the FlockDetection model.">
+            <h3 class="quiz-question">You want to add a &quot;notes&quot; field so users can type a short note for each detection (like "construction cam near park"). Which files would you instruct an AI agent to modify?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>BLEManager.swift — it&apos;s where detection data originates</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>DatabaseManager.swift (add the column) and FlockDetection.swift (add the property to the model)</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Only ContentView.swift — the UI needs a text field for the note</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-a"
+               data-explanation-right="Correct — the synced column is how DatabaseManager and iCloudManager coordinate without talking to each other directly. DatabaseManager sets synced=0 on save; iCloudManager reads rows where synced=0, backs them up, then sets synced=1. It&apos;s a simple but elegant handoff mechanism."
+               data-explanation-wrong="Look at the schema. The synced column is an integer that starts at 0. Think about what would use that flag and why the database itself needs to track that state.">
+            <h3 class="quiz-question">The <code>synced</code> column in the database starts at 0. What is its purpose, and which component changes it to 1?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>iCloudManager sets it to 1 after successfully backing up that detection — so it knows what still needs uploading</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The user manually marks detections as "reviewed" by tapping a checkbox in the history view</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The ESP32 hardware sets it to 1 to confirm it received an acknowledgment</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button type="button" class="quiz-check-btn" onclick="checkQuiz('quiz-module4')">Check Answers</button>
+          <button type="button" class="quiz-reset-btn" onclick="resetQuiz('quiz-module4')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+<section class="module" id="module-5" style="background: var(--color-bg)">
+  <div class="module-content">
+
+    <header class="module-header animate-in">
+      <span class="module-number">05</span>
+      <h1 class="module-title">Permission Granted</h1>
+      <p class="module-subtitle">Why iOS makes your app beg for access — how the permission system works, and what happens when it says no.</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- SCREEN 1: The Bouncer System -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">iOS Has a Bouncer at Every Door</h2>
+        <p>Imagine every sensitive hardware feature on your iPhone — GPS, microphone, camera, Bluetooth, motion sensors — has its own bouncer at the door. No app gets in without the user explicitly approving it. Even after approval, the user can revoke access at any time from Settings.</p>
+        <p>FlockFinder needs three types of hardware access to work. Each one requires the user&apos;s explicit consent:</p>
+
+        <div class="pattern-cards stagger-children">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-accent-light)">📶</div>
+            <h4 class="pattern-title">Bluetooth</h4>
+            <p class="pattern-desc">Required to scan for and connect to the ESP32 hardware. Without this, the app literally cannot receive any detections.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-info-light)">📍</div>
+            <h4 class="pattern-title">Location</h4>
+            <p class="pattern-desc">Required to tag detections with GPS coordinates. The app requests &quot;When In Use&quot; — only while the app is open.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: #FDF5E0">🏃</div>
+            <h4 class="pattern-title">Motion &amp; Activity</h4>
+            <p class="pattern-desc">Optional but useful — lets the app record whether you were driving, walking, or stationary when each camera was detected.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: The Info.plist Explanation Keys -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Telling Apple Why You Need Access</h2>
+        <p>iOS requires every app to explain <em>why</em> it needs each permission. These explanations live in a configuration file called <span class="term" data-definition="Info.plist is an XML configuration file that every iOS app must include. It tells iOS about the app: its name, what permissions it needs, what background tasks it runs, and many other settings.">Info.plist</span>. Apple reviews them — and if they seem suspicious or vague, your app gets rejected from the App Store.</p>
+
+        <div class="badge-list animate-in">
+          <div class="badge-item">
+            <span class="badge-code">NSBluetoothAlwaysUsageDescription</span>
+            <span class="badge-desc">"FlockFinder needs Bluetooth to connect to your FlockFinder device." — Required for any BLE use on newer iOS.</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">NSLocationWhenInUseUsageDescription</span>
+            <span class="badge-desc">"FlockFinder needs your location to tag detected surveillance devices." — Shown when requesting foreground location.</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">NSLocationAlwaysAndWhenInUseUsageDescription</span>
+            <span class="badge-desc">For the optional background mode — "FlockFinder needs location access to log detections while you drive." Background requires extra justification.</span>
+          </div>
+          <div class="badge-item">
+            <span class="badge-code">NSMotionUsageDescription</span>
+            <span class="badge-desc">"FlockFinder uses motion to record your direction and speed during detection." — For CoreMotion access.</span>
+          </div>
+        </div>
+
+        <div class="callout callout-warning animate-in">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-content">
+            <strong class="callout-title">The Missing Plist Key Crash</strong>
+            <p>If an app calls a permission API without the matching Info.plist key, iOS <strong>immediately crashes the app</strong> with a hard error. BLEManager.swift even has a debug check: <code>if Bundle.main.object(forInfoDictionaryKey: "NSLocationWhenInUseUsageDescription") == nil</code> — it prints a warning before crashing so you know exactly what&apos;s missing. If you see cryptic permission crashes, Info.plist is always the first place to check.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: Code Translation — Requesting Location -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Permission Request in Code</h2>
+        <p>Here&apos;s how LocationManager asks for permission — and what happens at each state.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-line"><span class="code-keyword">func</span> <span class="code-function">startTracking</span>() {</span>
+<span class="code-line">    <span class="code-keyword">guard</span> authorizationStatus == .authorizedWhenInUse ||</span>
+<span class="code-line">          authorizationStatus == .authorizedAlways <span class="code-keyword">else</span> {</span>
+<span class="code-line">        <span class="code-function">requestAuthorization</span>()</span>
+<span class="code-line">        <span class="code-keyword">return</span></span>
+<span class="code-line">    }</span>
+<span class="code-line">    locationManager.<span class="code-function">startUpdatingLocation</span>()</span>
+<span class="code-line">    locationManager.<span class="code-function">startUpdatingHeading</span>()</span>
+<span class="code-line">}</span>
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Function to start GPS tracking — called when the app opens.</p>
+              <p class="tl">Safety check: if the user has NOT granted location permission...</p>
+              <p class="tl">...(checking for either "when in use" or "always" access)...</p>
+              <p class="tl">...then ask for permission first (this shows the iOS popup)...</p>
+              <p class="tl">...and stop here — don&apos;t try to use GPS without permission.</p>
+              <p class="tl">End of the safety check block.</p>
+              <p class="tl">Permission confirmed — start receiving GPS position updates.</p>
+              <p class="tl">Also start receiving compass heading updates.</p>
+              <p class="tl">End of function.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: The Full System Architecture -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Complete Picture</h2>
+        <p>Click any component to see what it does. This is the full FlockFinder architecture — you&apos;ve now learned every part of it.</p>
+
+        <div class="arch-diagram animate-in">
+          <div class="arch-zone" style="border-color: var(--color-actor-1)">
+            <h4 class="arch-zone-label">Hardware Layer</h4>
+            <div class="arch-component"
+                 data-desc="ESP32-S3 FeatherS3: scans Wi-Fi signals, identifies Flock Safety and other camera signatures, packages detections as JSON, broadcasts over BLE as notifications."
+                 onclick="showArchDesc(this)">
+              <div class="arch-icon">📡</div>
+              <span>ESP32 Hardware</span>
+            </div>
+          </div>
+
+          <div class="arch-zone" style="border-color: var(--color-actor-2)">
+            <h4 class="arch-zone-label">Communication Layer</h4>
+            <div class="arch-component"
+                 data-desc="BLEManager: manages the CoreBluetooth central manager, scans for devices, establishes connections, subscribes to detection/stream characteristics, and fires the onDetection callback when data arrives."
+                 onclick="showArchDesc(this)">
+              <div class="arch-icon">📶</div>
+              <span>BLEManager</span>
+            </div>
+          </div>
+
+          <div class="arch-zone" style="border-color: var(--color-accent)">
+            <h4 class="arch-zone-label">Coordination Layer</h4>
+            <div class="arch-component"
+                 data-desc="DetectionCoordinator: listens for BLE detections, requests location data, applies confidence filtering, saves to database, triggers audio alert, and updates the UI list. The central orchestrator."
+                 onclick="showArchDesc(this)">
+              <div class="arch-icon">🎯</div>
+              <span>DetectionCoordinator</span>
+            </div>
+          </div>
+
+          <div class="arch-zone">
+            <h4 class="arch-zone-label">Services Layer</h4>
+            <div class="arch-component"
+                 data-desc="LocationManager: uses CoreLocation to track GPS position, compass heading, course, and speed. Updates every 5 meters. Provides getLocationData() snapshot on demand."
+                 onclick="showArchDesc(this)">
+              <div class="arch-icon">📍</div>
+              <span>LocationManager</span>
+            </div>
+            <div class="arch-component"
+                 data-desc="DatabaseManager: a shared singleton that wraps SQLite3. Creates the detections table with 4 indexes, provides insertDetection(), fetchAllDetections(), and export methods. Opens the .sqlite file at app launch."
+                 onclick="showArchDesc(this)">
+              <div class="arch-icon">💾</div>
+              <span>DatabaseManager</span>
+            </div>
+            <div class="arch-component"
+                 data-desc="MotionManager: uses CoreMotion to read the accelerometer and CMMotionActivityManager. Detects walking, automotive, cycling, and stationary activity types. Logs X/Y/Z acceleration with each detection."
+                 onclick="showArchDesc(this)">
+              <div class="arch-icon">🏃</div>
+              <span>MotionManager</span>
+            </div>
+            <div class="arch-component"
+                 data-desc="AudioAlertManager: plays the detection beep using AVFoundation and triggers UIImpactFeedbackGenerator for haptic feedback. A singleton — shared across the whole app."
+                 onclick="showArchDesc(this)">
+              <div class="arch-icon">🔔</div>
+              <span>AudioAlertManager</span>
+            </div>
+            <div class="arch-component"
+                 data-desc="iCloudManager: schedules throttled backups (max once per hour) of unsynced detections to iCloud Drive. Exports as CSV/JSON, marks rows synced=1 after upload."
+                 onclick="showArchDesc(this)">
+              <div class="arch-icon">☁️</div>
+              <span>iCloudManager</span>
+            </div>
+          </div>
+
+          <div class="arch-zone" style="border-color: var(--color-actor-5)">
+            <h4 class="arch-zone-label">UI Layer</h4>
+            <div class="arch-component"
+                 data-desc="ContentView: the 4-tab container (Scanner, Map, History, Settings). Uses @EnvironmentObject to inject all managers into child views."
+                 onclick="showArchDesc(this)">
+              <div class="arch-icon">📱</div>
+              <span>ContentView</span>
+            </div>
+            <div class="arch-component"
+                 data-desc="MapView: renders detection locations on a MapKit map using MKAnnotations. Each pin shows device type, MAC, timestamp, and signal strength."
+                 onclick="showArchDesc(this)">
+              <div class="arch-icon">🗺️</div>
+              <span>MapView</span>
+            </div>
+            <div class="arch-component"
+                 data-desc="HistoryView: a searchable list of all past detections fetched from DatabaseManager. Supports filtering by device type and exporting to CSV, JSON, or GPX."
+                 onclick="showArchDesc(this)">
+              <div class="arch-icon">📋</div>
+              <span>HistoryView</span>
+            </div>
+          </div>
+
+          <div class="arch-description" id="arch-desc">Click any component above to see what it does</div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: Final Quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Final Challenge</h2>
+        <p>These scenarios test whether you can apply everything you&apos;ve learned across the whole course.</p>
+
+        <div class="quiz-container" id="quiz-module5">
+
+          <div class="quiz-question-block"
+               data-correct="option-b"
+               data-explanation-right="Correct — &quot;Location access denied&quot; in LocationManager means getLocationData() returns zeros (0,0 coordinates). The detection still gets saved — the code doesn&apos;t check if GPS is valid before inserting. So you&apos;d see detections with coordinates at lat:0, lng:0 in the ocean off Africa. The fix is to guard against a nil currentLocation before creating the FlockDetection."
+               data-explanation-wrong="Think about what LocationManager returns when it has no permission — a nil or zero value. Then trace what happens: the coordinator still builds a FlockDetection (it doesn&apos;t check for valid GPS), the database inserts it. Where does that bad data end up?">
+            <h3 class="quiz-question">A user grants Bluetooth permission but denies Location permission. They drive past three Flock cameras and the app beeps for each one. But the map shows no pins. What&apos;s happening?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The detections aren&apos;t saved at all because location is required for DatabaseManager to work</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Detections are saved but with lat:0, lng:0 coordinates — which places them in the middle of the ocean, not on the local map</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The map requires a paid iCloud subscription to display pins</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-c"
+               data-explanation-right="Exactly — the @Published var recentDetections array in BLEManager is what the Scanner tab watches. DetectionCoordinator uses DispatchQueue.main.async to insert new detections at the front of this array. SwiftUI sees the @Published change and re-renders any view that reads it. No manual refresh needed."
+               data-explanation-wrong="Think about what makes the Scanner tab re-render immediately when a detection arrives. Which @Published property holds the live feed of recent detections? Who inserts into it, and how does SwiftUI know to redraw?">
+            <h3 class="quiz-question">The Scanner tab shows recent detections live — the list updates the moment a camera is found. What mechanism makes the list refresh without the user pulling to reload?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>A timer polls DatabaseManager every second and refreshes the list</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The app sends a push notification to itself, which triggers a UI refresh</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>@Published var recentDetections in BLEManager — SwiftUI automatically re-renders any view that reads it when it changes</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-a"
+               data-explanation-right="Right — you&apos;d tell AI to: 1) add a new tab in ContentView.swift, 2) create a new SwiftUI view that reads from DatabaseManager with a GROUP BY device_type query, and 3) add a new fetchDeviceTypeStats() method to DatabaseManager. The @EnvironmentObject pattern means the new view gets automatic access to all the managers."
+               data-explanation-wrong="Think about the three-layer separation: UI (Views) at the top, coordination in the middle, data at the bottom. Adding a new screen is primarily a UI change, but it needs a new data query too. Which files touch data display vs data access?">
+            <h3 class="quiz-question">You want to add a new &quot;Stats&quot; tab showing a breakdown: how many Flock Safety vs Ring vs Verkada cameras you&apos;ve detected. Which three things would you instruct an AI agent to do?</h3>
+            <div class="quiz-options">
+              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Add a tab in ContentView, create a new StatsView SwiftUI file, add a fetchDeviceTypeStats() method to DatabaseManager</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Modify BLEManager to count detections by type as they arrive, and add a counter display in the Scanner tab</span>
+              </button>
+              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Add a stats screen to SettingsView — it&apos;s the catch-all for extra features</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button type="button" class="quiz-check-btn" onclick="checkQuiz('quiz-module5')">Check Answers</button>
+          <button type="button" class="quiz-reset-btn" onclick="resetQuiz('quiz-module5')">Try Again</button>
+        </div>
+      </section>
+
+      <!-- SCREEN 6: Course Complete -->
+      <section class="screen animate-in" style="text-align:center; padding: var(--space-16) 0;">
+        <div style="font-size:3rem; margin-bottom: var(--space-6)">🎯</div>
+        <h2 class="screen-heading" style="font-size: var(--text-3xl)">You Know How FlockFinder Works</h2>
+        <p style="font-size: var(--text-lg); color: var(--color-text-secondary); max-width: 560px; margin: 0 auto var(--space-8)">You can now explain the architecture, debug common issues, and give precise instructions to AI coding agents — without reading every line of code yourself.</p>
+
+        <div class="pattern-cards animate-in stagger-children" style="text-align:left; margin-top: var(--space-8)">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-accent)">
+            <div class="pattern-icon" style="background: var(--color-accent-light)">🧭</div>
+            <h4 class="pattern-title">Navigate the Codebase</h4>
+            <p class="pattern-desc">You know exactly which file to open for any feature — Manager/ for hardware, Views/ for orchestration and UI, Models/ for data shapes.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-info-light)">🐛</div>
+            <h4 class="pattern-title">Debug Confidently</h4>
+            <p class="pattern-desc">"Map shows no pins" → check location permissions. "No detections" → check BLE UUIDs and connection state. "Data disappears" → check the SQLite file and synced column.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-5)">
+            <div class="pattern-icon" style="background: var(--color-success-light)">🤖</div>
+            <h4 class="pattern-title">Steer AI Precisely</h4>
+            <p class="pattern-desc">Instead of "add a feature," you can say: "In DetectionCoordinator.handleDetection(), after calling databaseManager.insertDetection(), also call notificationManager.schedule() with the detection data."</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+  </main>
+
+</body>
+</html>
