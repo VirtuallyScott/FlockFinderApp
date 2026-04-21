@@ -219,43 +219,58 @@
         </div>
       </section>
 
-      <!-- SCREEN 5: Drag and match quiz -->
+      <!-- SCREEN 5: How All the Files Connect -->
       <section class="screen animate-in">
-        <h2 class="screen-heading">Match Each Manager to Its Job</h2>
-        <p>Drag each manager name to the description that matches what it does — you can drag on mobile too.</p>
+        <h2 class="screen-heading">How All the Files Connect</h2>
+        <p>The app is wired together in <strong>FlockFinderApp.swift</strong> — the entry point that creates every manager and injects them into the view hierarchy. Understanding this one file shows how the whole system is threaded together.</p>
 
-        <div class="dnd-container" id="dnd-module2">
-          <div class="dnd-chips">
-            <div class="dnd-chip" draggable="true" data-answer="ble">BLEManager</div>
-            <div class="dnd-chip" draggable="true" data-answer="loc">LocationManager</div>
-            <div class="dnd-chip" draggable="true" data-answer="db">DatabaseManager</div>
-            <div class="dnd-chip" draggable="true" data-answer="coord">DetectionCoordinator</div>
-            <div class="dnd-chip" draggable="true" data-answer="audio">AudioAlertManager</div>
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">FlockFinderApp.swift</span>
+            <pre><code>
+<span class="code-line"><span class="code-keyword">@main</span></span>
+<span class="code-line"><span class="code-keyword">struct</span> <span class="code-function">FlockFinderApp</span>: App {</span>
+<span class="code-line">    <span class="code-keyword">@StateObject private var</span> bleManager = <span class="code-function">BLEManager</span>()</span>
+<span class="code-line">    <span class="code-keyword">@StateObject private var</span> locationManager = <span class="code-function">LocationManager</span>()</span>
+<span class="code-line">    <span class="code-keyword">@StateObject private var</span> databaseManager = DatabaseManager.shared</span>
+<span class="code-line">    <span class="code-keyword">@StateObject private var</span> detectionCoordinator: <span class="code-function">DetectionCoordinator</span></span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="code-keyword">var</span> body: <span class="code-keyword">some</span> Scene {</span>
+<span class="code-line">        WindowGroup {</span>
+<span class="code-line">            <span class="code-function">ContentView</span>()</span>
+<span class="code-line">                .<span class="code-function">environmentObject</span>(bleManager)</span>
+<span class="code-line">                .<span class="code-function">environmentObject</span>(locationManager)</span>
+<span class="code-line">                .<span class="code-function">environmentObject</span>(databaseManager)</span>
+<span class="code-line">        }</span>
+<span class="code-line">    }</span>
+<span class="code-line">}</span>
+            </code></pre>
           </div>
-          <div class="dnd-zones">
-            <div class="dnd-zone" data-correct="coord">
-              <p class="dnd-zone-label">Calls all other managers in order when a detection arrives. Doesn&apos;t do any of the actual work itself.</p>
-              <div class="dnd-zone-target">Drop here</div>
-            </div>
-            <div class="dnd-zone" data-correct="ble">
-              <p class="dnd-zone-label">Connects to the ESP32 hardware over Bluetooth and receives detection notifications.</p>
-              <div class="dnd-zone-target">Drop here</div>
-            </div>
-            <div class="dnd-zone" data-correct="db">
-              <p class="dnd-zone-label">Saves detection records to a local database file and retrieves history for display.</p>
-              <div class="dnd-zone-target">Drop here</div>
-            </div>
-            <div class="dnd-zone" data-correct="loc">
-              <p class="dnd-zone-label">Tracks GPS position, speed, and compass direction using the iPhone&apos;s location hardware.</p>
-              <div class="dnd-zone-target">Drop here</div>
-            </div>
-            <div class="dnd-zone" data-correct="audio">
-              <p class="dnd-zone-label">Plays the detection sound and triggers the haptic buzz in the phone.</p>
-              <div class="dnd-zone-target">Drop here</div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">@main means this is THE starting point — iOS boots this struct when the app launches.</p>
+              <p class="tl">Create and own the Bluetooth manager. @StateObject means the app owns its entire lifetime.</p>
+              <p class="tl">Create and own the GPS tracker.</p>
+              <p class="tl">Get the database manager (shared singleton — only one ever exists).</p>
+              <p class="tl">Create the coordinator, which needs the other three managers wired in at construction.</p>
+              <p class="tl"></p>
+              <p class="tl">Build the main window...</p>
+              <p class="tl">...showing ContentView as the root screen...</p>
+              <p class="tl">...and inject BLE manager so any view deep in the hierarchy can reach it.</p>
+              <p class="tl">...inject GPS manager the same way.</p>
+              <p class="tl">...inject the database manager.</p>
+              <p class="tl">Close window group, close scene body, close struct.</p>
             </div>
           </div>
-          <button type="button" onclick="checkDnD('dnd-module2')" style="margin-top: 1rem; padding: 0.5rem 1.5rem; background: var(--color-accent); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Check Matches</button>
-          <button type="button" onclick="resetDnD('dnd-module2')" style="margin-top: 1rem; margin-left: 0.75rem; padding: 0.5rem 1.5rem; background: white; border: 1px solid var(--color-border); border-radius: 8px; font-weight: 600; cursor: pointer;">Reset</button>
+        </div>
+
+        <div class="callout callout-accent animate-in">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">Why DetectionCoordinator Isn&apos;t Injected</strong>
+            <p><code>detectionCoordinator</code> is NOT passed via <code>.environmentObject()</code>. That&apos;s intentional — the coordinator works silently in the background and no view needs to read from it directly. Only the managers that views need to display data from are injected. Any view in the entire app can access <code>bleManager</code>, <code>locationManager</code>, or <code>databaseManager</code> simply by declaring <code>@EnvironmentObject var bleManager: BLEManager</code> — no extra plumbing required.</p>
+          </div>
         </div>
       </section>
 

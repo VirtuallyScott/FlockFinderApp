@@ -179,58 +179,59 @@
         </div>
       </section>
 
-      <!-- SCREEN 5: Quiz -->
+      <!-- SCREEN 5: Complete BLE Protocol Reference -->
       <section class="screen animate-in">
-        <h2 class="screen-heading">Test Your Understanding</h2>
+        <h2 class="screen-heading">Complete BLE Protocol Reference</h2>
+        <p>Everything the iPhone and ESP32 say to each other passes through three named channels called <span class="term" data-definition="In BLE, a characteristic is a named data channel within a service. Think of a service as a filing cabinet and characteristics as individual drawers — each drawer holds one type of information with rules about who can read or write to it.">characteristics</span>. Here is the full map.</p>
 
-        <div class="quiz-container" id="quiz-module3">
-
-          <div class="quiz-question-block"
-               data-correct="option-c"
-               data-explanation-right="Correct — UUIDs are how devices agree on which channel to use. If either side has a typo or a different UUID, they discover services but nothing matches. The connection succeeds but no data flows."
-               data-explanation-wrong="UUIDs are the channel identifiers, not something that changes with distance or settings. If the app connects successfully but gets no detections, a UUID mismatch is a prime suspect.">
-            <h3 class="quiz-question">Your ESP32 connects to the iOS app but you never receive any detection notifications. The connection state shows "Connected" but the detection characteristic appears empty. What&apos;s the most likely cause?</h3>
-            <div class="quiz-options">
-              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>The device is too far away — BLE range is limited to about 1 meter</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>The iOS app needs Location permission to receive BLE data</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>The detection characteristic UUID in the app doesn&apos;t match the UUID in the ESP32 firmware</span>
-              </button>
-            </div>
-            <div class="quiz-feedback"></div>
+        <div class="pattern-cards stagger-children">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-accent-light); color: var(--color-actor-1)">🎯</div>
+            <h4 class="pattern-title">Detection Characteristic</h4>
+            <p class="pattern-desc" style="font-family: var(--font-mono); font-size:0.72rem; word-break:break-all; color:var(--color-text-secondary); margin-bottom:0.5rem">beb5483e-36e1-4688-b7f5-ea07361b26a8</p>
+            <p class="pattern-desc"><strong>Direction:</strong> ESP32 → iPhone (Notify only)<br>The ESP32 pushes a JSON message here whenever it identifies a known surveillance device. The iPhone subscribes and receives it automatically.</p>
           </div>
-
-          <div class="quiz-question-block"
-               data-correct="option-a"
-               data-explanation-right="Right — the Command Characteristic (ending ...26a9) is the writable channel. The detection characteristic (...26a8) is read-only/notify — the ESP32 pushes to it, the phone can only listen. To send instructions, you write to the command channel."
-               data-explanation-wrong="Look at the badge list in this module. There are three characteristics: detection (notify), command (write), and stream. Which one is designed for sending messages TO the device?">
-            <h3 class="quiz-question">You want to add a feature to send a &quot;test ping&quot; command from the iPhone to the ESP32. Which characteristic UUID would you write to?</h3>
-            <div class="quiz-options">
-              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>commandCharacteristicUUID (beb5483e-...26a9) — it was designed for write operations</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>detectionCharacteristicUUID (beb5483e-...26a8) — it&apos;s the main data channel</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>flockServiceUUID — services are the top-level communication channel</span>
-              </button>
-            </div>
-            <div class="quiz-feedback"></div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-info-light); color: var(--color-actor-2)">⬆️</div>
+            <h4 class="pattern-title">Command Characteristic</h4>
+            <p class="pattern-desc" style="font-family: var(--font-mono); font-size:0.72rem; word-break:break-all; color:var(--color-text-secondary); margin-bottom:0.5rem">beb5483e-36e1-4688-b7f5-ea07361b26a9</p>
+            <p class="pattern-desc"><strong>Direction:</strong> iPhone → ESP32 (Write)<br>The iPhone sends text commands to the hardware — for example to trigger a scan, request status, or change behavior. The last digit increments by one from the detection UUID.</p>
           </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: #EEE8FF; color: var(--color-actor-3)">📺</div>
+            <h4 class="pattern-title">Stream Characteristic</h4>
+            <p class="pattern-desc" style="font-family: var(--font-mono); font-size:0.72rem; word-break:break-all; color:var(--color-text-secondary); margin-bottom:0.5rem">beb5483e-36e1-4688-b7f5-ea07361b26aa</p>
+            <p class="pattern-desc"><strong>Direction:</strong> ESP32 → iPhone (Notify)<br>A raw live feed of everything the ESP32 sees: every Wi-Fi and BLE device, channel hops, status messages. Powers the Debug Stream view.</p>
+          </div>
+        </div>
 
-          <button type="button" class="quiz-check-btn" onclick="checkQuiz('quiz-module3')">Check Answers</button>
-          <button type="button" class="quiz-reset-btn" onclick="resetQuiz('quiz-module3')">Try Again</button>
+        <div class="translation-block animate-in" style="margin-top: var(--space-8)">
+          <div class="translation-code">
+            <span class="translation-label">DETECTION JSON FORMAT</span>
+            <pre><code>
+<span class="code-line">{</span>
+<span class="code-line">  <span class="code-string">"type"</span>:       <span class="code-string">"Flock Safety"</span>,</span>
+<span class="code-line">  <span class="code-string">"mac"</span>:        <span class="code-string">"AA:BB:CC:DD:EE:FF"</span>,</span>
+<span class="code-line">  <span class="code-string">"ssid"</span>:       <span class="code-string">"FLOCK-CAM-001"</span>,</span>
+<span class="code-line">  <span class="code-string">"rssi"</span>:       <span class="code-keyword">-55</span>,</span>
+<span class="code-line">  <span class="code-string">"confidence"</span>: <span class="code-keyword">0.95</span>,</span>
+<span class="code-line">  <span class="code-string">"ts"</span>:         <span class="code-keyword">123456789</span></span>
+<span class="code-line">}</span>
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">FIELD GUIDE</span>
+            <div class="translation-lines">
+              <p class="tl">Start of JSON object.</p>
+              <p class="tl">Camera brand string — maps directly to the DeviceType enum in Swift.</p>
+              <p class="tl">Hardware MAC address — unique to this physical camera.</p>
+              <p class="tl">Wi-Fi network name the camera is broadcasting.</p>
+              <p class="tl">Signal strength. -55 dBm = strong. -90 dBm = barely visible.</p>
+              <p class="tl">Detection confidence from 0.0 to 1.0. Below the app threshold = ignored entirely.</p>
+              <p class="tl">Hardware timestamp from the ESP32 — the app ignores this and uses its own Date().</p>
+              <p class="tl">End of JSON object.</p>
+            </div>
+          </div>
         </div>
       </section>
 

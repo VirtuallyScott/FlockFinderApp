@@ -164,59 +164,69 @@
         </div>
       </section>
 
-      <!-- SCREEN 5: Quiz -->
+      <!-- SCREEN 5: Anatomy of a Detection Record -->
       <section class="screen animate-in">
-        <h2 class="screen-heading">Check Your Understanding</h2>
-        <p>Apply what you just learned to a new scenario.</p>
+        <h2 class="screen-heading">Anatomy of a Detection Record</h2>
+        <p>Every detection saved to the database is a <span class="term" data-definition="A struct is a value type in Swift — a named bundle of related data. When you copy a struct, you get a completely independent copy. Like filling out a paper form: each detection gets its own copy of the form, fully filled in.">struct</span> called <code>FlockDetection</code>, defined in <strong>Models/FlockDetection.swift</strong>. Here is every field and what it captures.</p>
 
-        <div class="quiz-container" id="quiz-module1">
-
-          <div class="quiz-question-block"
-               data-correct="option-b"
-               data-explanation-right="Exactly — DetectionCoordinator is the orchestrator. It receives the raw BLE data, calls LocationManager for GPS, builds the complete record, and hands it to DatabaseManager. It coordinates the others without doing their specialized work."
-               data-explanation-wrong="Think about which component receives the raw BLE callback, then calls all the others. One file is designed specifically to coordinate the workflow between specialists.">
-            <h3 class="quiz-question">You want to add a feature: when a camera is detected, also send a push notification. Which file would you tell an AI agent to modify?</h3>
-            <div class="quiz-options">
-              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>BLEManager.swift — it receives the detection first</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>DetectionCoordinator.swift — it orchestrates everything that happens on detection</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>DatabaseManager.swift — detections are saved there</span>
-              </button>
+        <div class="icon-rows stagger-children">
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-1); color:white">🎯</div>
+            <div>
+              <strong>id: Int64</strong>
+              <p>Auto-incrementing number assigned by the database (row 1, 2, 3…). Each detection gets a permanent, unique ID that never changes.</p>
             </div>
-            <div class="quiz-feedback"></div>
           </div>
-
-          <div class="quiz-question-block"
-               data-correct="option-c"
-               data-explanation-right="Right — a low confidence score means the hardware isn't sure what it detected. The guard statement acts like a filter: if confidence is below the threshold, the function exits immediately without saving or alerting."
-               data-explanation-wrong="Look at the guard statement in the code. It checks a minimum confidence setting before doing anything else. What happens when that check fails?">
-            <h3 class="quiz-question">A user reports they're getting false alerts for Ring doorbells they don't care about. The fix would be to raise the minimum confidence threshold. Looking at the code, what happens to a detection that falls below that threshold?</h3>
-            <div class="quiz-options">
-              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>It gets saved to the database but not shown in the map</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>It plays a different, quieter alert sound</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>The function exits immediately — nothing is saved or alerted</span>
-              </button>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-2); color:white">🏷️</div>
+            <div>
+              <strong>deviceType: DeviceType</strong>
+              <p>The camera brand — one of 12 known types: Flock Safety, Verkada, Ring, Nest, Hikvision, Dahua, Axis, Lorex, Reolink, Arlo, Wyze, Eufy — or &quot;Unknown.&quot; Defined as a Swift enum in the same file.</p>
             </div>
-            <div class="quiz-feedback"></div>
           </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-3); color:white">📟</div>
+            <div>
+              <strong>macAddress: String? &amp; ssid: String?</strong>
+              <p>The camera&apos;s hardware <span class="term" data-definition="A MAC address is a unique ID burned into every Wi-Fi chip at the factory — like a serial number. It never changes unless spoofed.">MAC address</span> and the Wi-Fi name it broadcasts. The <code>?</code> means optional — not every detection includes one.</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-4); color:white">📶</div>
+            <div>
+              <strong>rssi: Int &amp; confidence: Double</strong>
+              <p><span class="term" data-definition="RSSI (Received Signal Strength Indicator) is a negative number: -50 dBm is strong, -90 dBm is weak. The ESP32 reports how clearly it heard the camera&apos;s signal.">RSSI</span> in dBm (-50 = strong, -90 = weak). Confidence is 0.0–1.0 — how certain the hardware is that it correctly identified the camera brand.</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-5); color:white">📍</div>
+            <div>
+              <strong>latitude, longitude, altitude, accuracy</strong>
+              <p>GPS coordinates in decimal degrees. Altitude in meters above sea level. Accuracy is the GPS error radius in meters — lower is better (4m = very good, 50m = poor).</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-accent); color:white">🚗</div>
+            <div>
+              <strong>speed: Double &amp; heading: Double</strong>
+              <p>Speed in meters/second from GPS (multiply by 2.237 to get mph). Heading is direction of travel 0–360° — 0=North, 90=East, 180=South, 270=West.</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: #888; color:white">⏱️</div>
+            <div>
+              <strong>timestamp: Date &amp; synced: Bool</strong>
+              <p>When the detection occurred (stored as ISO-8601 text in the database). <code>synced</code> starts as <code>false</code> — iCloudManager flips it to <code>true</code> after a successful backup so it doesn&apos;t get uploaded twice.</p>
+            </div>
+          </div>
+        </div>
 
-          <button type="button" class="quiz-check-btn" onclick="checkQuiz('quiz-module1')">Check Answers</button>
-          <button type="button" class="quiz-reset-btn" onclick="resetQuiz('quiz-module1')">Try Again</button>
+        <div class="callout callout-info animate-in">
+          <div class="callout-icon">ℹ️</div>
+          <div class="callout-content">
+            <strong class="callout-title">The Deprecated Fields</strong>
+            <p><code>accelerationX/Y/Z</code> and <code>activityType</code> still exist in the struct and in the database, but MotionManager (the class that filled them) has been marked deprecated. GPS speed and heading proved more accurate for vehicle-based detection. The fields are kept so old database rows don&apos;t break when the app updates.</p>
+          </div>
         </div>
       </section>
 

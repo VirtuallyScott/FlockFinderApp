@@ -200,81 +200,56 @@
         </div>
       </section>
 
-      <!-- SCREEN 5: Final Quiz -->
+      <!-- SCREEN 5: Codebase Quick Reference -->
       <section class="screen animate-in">
-        <h2 class="screen-heading">Final Challenge</h2>
-        <p>These scenarios test whether you can apply everything you&apos;ve learned across the whole course.</p>
+        <h2 class="screen-heading">Codebase Quick Reference</h2>
+        <p>The master map — every file, what it owns, and where to find any feature or behavior in the FlockFinder codebase.</p>
 
-        <div class="quiz-container" id="quiz-module5">
-
-          <div class="quiz-question-block"
-               data-correct="option-b"
-               data-explanation-right="Correct — &quot;Location access denied&quot; in LocationManager means getLocationData() returns zeros (0,0 coordinates). The detection still gets saved — the code doesn&apos;t check if GPS is valid before inserting. So you&apos;d see detections with coordinates at lat:0, lng:0 in the ocean off Africa. The fix is to guard against a nil currentLocation before creating the FlockDetection."
-               data-explanation-wrong="Think about what LocationManager returns when it has no permission — a nil or zero value. Then trace what happens: the coordinator still builds a FlockDetection (it doesn&apos;t check for valid GPS), the database inserts it. Where does that bad data end up?">
-            <h3 class="quiz-question">A user grants Bluetooth permission but denies Location permission. They drive past three Flock cameras and the app beeps for each one. But the map shows no pins. What&apos;s happening?</h3>
-            <div class="quiz-options">
-              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>The detections aren&apos;t saved at all because location is required for DatabaseManager to work</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>Detections are saved but with lat:0, lng:0 coordinates — which places them in the middle of the ocean, not on the local map</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>The map requires a paid iCloud subscription to display pins</span>
-              </button>
+        <div class="file-tree animate-in">
+          <div class="ft-folder">
+            <span class="ft-name">FlockFinder/ <span style="color:var(--color-text-secondary);font-weight:400;font-size:0.85rem">— The iOS app source</span></span>
+            <div class="ft-children">
+              <div class="ft-file"><span class="ft-name">FlockFinderApp.swift</span><span class="ft-desc">— App entry point. Creates all managers. Wires them into the view tree via .environmentObject()</span></div>
+              <div class="ft-file"><span class="ft-name">Info.plist</span><span class="ft-desc">— Privacy permission strings (Bluetooth, Location, Motion). Required by Apple before any hardware access.</span></div>
+              <div class="ft-folder">
+                <span class="ft-name">Managers/ <span style="color:var(--color-text-secondary);font-weight:400;font-size:0.85rem">— Hardware access. No UI.</span></span>
+                <div class="ft-children">
+                  <div class="ft-file"><span class="ft-name">BLEManager.swift</span><span class="ft-desc">— CoreBluetooth. Scans, connects, receives JSON detections from ESP32. Owns recentDetections[].</span></div>
+                  <div class="ft-file"><span class="ft-name">LocationManager.swift</span><span class="ft-desc">— CoreLocation. GPS position, speed, heading. Updates every 5 meters.</span></div>
+                  <div class="ft-file"><span class="ft-name">DatabaseManager.swift</span><span class="ft-desc">— SQLite3. Reads/writes flockfinder.sqlite in app Documents folder. Singleton.</span></div>
+                  <div class="ft-file"><span class="ft-name">MotionManager.swift</span><span class="ft-desc">— CoreMotion. ⚠️ DEPRECATED. GPS replaced its use. Kept for reference only.</span></div>
+                </div>
+              </div>
+              <div class="ft-folder">
+                <span class="ft-name">Views/ <span style="color:var(--color-text-secondary);font-weight:400;font-size:0.85rem">— SwiftUI screens + orchestration</span></span>
+                <div class="ft-children">
+                  <div class="ft-file"><span class="ft-name">ContentView.swift</span><span class="ft-desc">— Root TabView. 4 tabs: Scanner | Map | History | Settings.</span></div>
+                  <div class="ft-file"><span class="ft-name">DetectionCoordinator.swift</span><span class="ft-desc">— Orchestrates each detection: GPS lookup → confidence check → DB save → audio → haptics.</span></div>
+                  <div class="ft-file"><span class="ft-name">MapView.swift</span><span class="ft-desc">— MapKit. Plots all saved detections as map pins. North-up and heading-up modes.</span></div>
+                  <div class="ft-file"><span class="ft-name">HistoryView.swift</span><span class="ft-desc">— Searchable list of all detections. Filter by device type. Export to CSV / JSON / GPX.</span></div>
+                  <div class="ft-file"><span class="ft-name">SettingsView.swift</span><span class="ft-desc">— Preference UI. Reads/writes AppSettings singleton.</span></div>
+                  <div class="ft-file"><span class="ft-name">AppSettings.swift</span><span class="ft-desc">— NSUbiquitousKeyValueStore. iCloud-synced preferences (confidence threshold, audio, map mode). Singleton.</span></div>
+                  <div class="ft-file"><span class="ft-name">AudioAlertManager.swift</span><span class="ft-desc">— AVFoundation + UIKit. Detection sounds and haptic feedback. Works with CarPlay and Bluetooth audio.</span></div>
+                  <div class="ft-file"><span class="ft-name">iCloudManager.swift</span><span class="ft-desc">— CloudKit. Copies flockfinder.sqlite to iCloud Drive. Auto-backup throttled to once per hour.</span></div>
+                  <div class="ft-file"><span class="ft-name">DebugStreamView.swift</span><span class="ft-desc">— Live raw BLE stream: every Wi-Fi device seen, every BLE device, every channel hop. Developer tool.</span></div>
+                </div>
+              </div>
+              <div class="ft-folder">
+                <span class="ft-name">Models/ <span style="color:var(--color-text-secondary);font-weight:400;font-size:0.85rem">— Data shapes</span></span>
+                <div class="ft-children">
+                  <div class="ft-file"><span class="ft-name">FlockDetection.swift</span><span class="ft-desc">— The FlockDetection struct (18 fields). The DeviceType enum (12 camera brands + Unknown).</span></div>
+                </div>
+              </div>
             </div>
-            <div class="quiz-feedback"></div>
           </div>
+        </div>
 
-          <div class="quiz-question-block"
-               data-correct="option-c"
-               data-explanation-right="Exactly — the @Published var recentDetections array in BLEManager is what the Scanner tab watches. DetectionCoordinator uses DispatchQueue.main.async to insert new detections at the front of this array. SwiftUI sees the @Published change and re-renders any view that reads it. No manual refresh needed."
-               data-explanation-wrong="Think about what makes the Scanner tab re-render immediately when a detection arrives. Which @Published property holds the live feed of recent detections? Who inserts into it, and how does SwiftUI know to redraw?">
-            <h3 class="quiz-question">The Scanner tab shows recent detections live — the list updates the moment a camera is found. What mechanism makes the list refresh without the user pulling to reload?</h3>
-            <div class="quiz-options">
-              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>A timer polls DatabaseManager every second and refreshes the list</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>The app sends a push notification to itself, which triggers a UI refresh</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>@Published var recentDetections in BLEManager — SwiftUI automatically re-renders any view that reads it when it changes</span>
-              </button>
-            </div>
-            <div class="quiz-feedback"></div>
+        <div class="callout callout-info animate-in">
+          <div class="callout-icon">📁</div>
+          <div class="callout-content">
+            <strong class="callout-title">Where Data Lives on Disk</strong>
+            <p>The SQLite database: <code>Documents/flockfinder.sqlite</code> inside the app&apos;s sandbox. iCloudManager copies it to iCloud Drive as <code>Documents/flockfinder_backup.sqlite</code>. User preferences live in iCloud <span class="term" data-definition="NSUbiquitousKeyValueStore is Apple&apos;s simplest iCloud sync mechanism — a dictionary that automatically syncs small key-value pairs (like settings toggles and sliders) across all the user&apos;s devices without any manual sync calls.">Key-Value Store</span> — an invisible synced preferences file automatically managed by iOS.</p>
           </div>
-
-          <div class="quiz-question-block"
-               data-correct="option-a"
-               data-explanation-right="Right — you&apos;d tell AI to: 1) add a new tab in ContentView.swift, 2) create a new SwiftUI view that reads from DatabaseManager with a GROUP BY device_type query, and 3) add a new fetchDeviceTypeStats() method to DatabaseManager. The @EnvironmentObject pattern means the new view gets automatic access to all the managers."
-               data-explanation-wrong="Think about the three-layer separation: UI (Views) at the top, coordination in the middle, data at the bottom. Adding a new screen is primarily a UI change, but it needs a new data query too. Which files touch data display vs data access?">
-            <h3 class="quiz-question">You want to add a new &quot;Stats&quot; tab showing a breakdown: how many Flock Safety vs Ring vs Verkada cameras you&apos;ve detected. Which three things would you instruct an AI agent to do?</h3>
-            <div class="quiz-options">
-              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>Add a tab in ContentView, create a new StatsView SwiftUI file, add a fetchDeviceTypeStats() method to DatabaseManager</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>Modify BLEManager to count detections by type as they arrive, and add a counter display in the Scanner tab</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>Add a stats screen to SettingsView — it&apos;s the catch-all for extra features</span>
-              </button>
-            </div>
-            <div class="quiz-feedback"></div>
-          </div>
-
-          <button type="button" class="quiz-check-btn" onclick="checkQuiz('quiz-module5')">Check Answers</button>
-          <button type="button" class="quiz-reset-btn" onclick="resetQuiz('quiz-module5')">Try Again</button>
         </div>
       </section>
 

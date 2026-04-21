@@ -187,58 +187,69 @@
         </div>
       </section>
 
-      <!-- SCREEN 5: Quiz -->
+      <!-- SCREEN 5: The Complete Database Schema -->
       <section class="screen animate-in">
-        <h2 class="screen-heading">Apply What You Know</h2>
+        <h2 class="screen-heading">The Complete Database Schema</h2>
+        <p>The <code>detections</code> table in <strong>flockfinder.sqlite</strong> has 18 columns. Here is every column, its type, and why it exists — the ground truth for what is stored on disk.</p>
 
-        <div class="quiz-container" id="quiz-module4">
-
-          <div class="quiz-question-block"
-               data-correct="option-b"
-               data-explanation-right="Exactly — you would tell AI: add a column called &apos;notes&apos; (TEXT, nullable) to the detections table and update the INSERT statement. You also need to handle the case where old rows don&apos;t have this column — that&apos;s called a database migration."
-               data-explanation-wrong="A new piece of data for each detection would live as a new column in the detections table. You would modify DatabaseManager.swift — specifically the CREATE TABLE statement and the INSERT statement. You&apos;d also update the FlockDetection model.">
-            <h3 class="quiz-question">You want to add a &quot;notes&quot; field so users can type a short note for each detection (like "construction cam near park"). Which files would you instruct an AI agent to modify?</h3>
-            <div class="quiz-options">
-              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>BLEManager.swift — it&apos;s where detection data originates</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>DatabaseManager.swift (add the column) and FlockDetection.swift (add the property to the model)</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>Only ContentView.swift — the UI needs a text field for the note</span>
-              </button>
-            </div>
-            <div class="quiz-feedback"></div>
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">SQL SCHEMA (DatabaseManager.swift)</span>
+            <pre><code>
+<span class="code-line"><span class="code-keyword">CREATE TABLE IF NOT EXISTS</span> detections (</span>
+<span class="code-line">  id             INTEGER PRIMARY KEY AUTOINCREMENT,</span>
+<span class="code-line">  device_type    TEXT <span class="code-keyword">NOT NULL</span>,</span>
+<span class="code-line">  mac_address    TEXT,</span>
+<span class="code-line">  ssid           TEXT,</span>
+<span class="code-line">  rssi           INTEGER <span class="code-keyword">NOT NULL</span>,</span>
+<span class="code-line">  confidence     REAL <span class="code-keyword">NOT NULL</span>,</span>
+<span class="code-line">  latitude       REAL <span class="code-keyword">NOT NULL</span>,</span>
+<span class="code-line">  longitude      REAL <span class="code-keyword">NOT NULL</span>,</span>
+<span class="code-line">  altitude       REAL,</span>
+<span class="code-line">  accuracy       REAL,</span>
+<span class="code-line">  speed          REAL,</span>
+<span class="code-line">  heading        REAL,</span>
+<span class="code-line">  acceleration_x REAL,</span>
+<span class="code-line">  acceleration_y REAL,</span>
+<span class="code-line">  acceleration_z REAL,</span>
+<span class="code-line">  activity_type  TEXT,</span>
+<span class="code-line">  timestamp      TEXT <span class="code-keyword">NOT NULL</span>,</span>
+<span class="code-line">  synced         INTEGER <span class="code-keyword">DEFAULT</span> 0</span>
+<span class="code-line">);</span>
+            </code></pre>
           </div>
-
-          <div class="quiz-question-block"
-               data-correct="option-a"
-               data-explanation-right="Correct — the synced column is how DatabaseManager and iCloudManager coordinate without talking to each other directly. DatabaseManager sets synced=0 on save; iCloudManager reads rows where synced=0, backs them up, then sets synced=1. It&apos;s a simple but elegant handoff mechanism."
-               data-explanation-wrong="Look at the schema. The synced column is an integer that starts at 0. Think about what would use that flag and why the database itself needs to track that state.">
-            <h3 class="quiz-question">The <code>synced</code> column in the database starts at 0. What is its purpose, and which component changes it to 1?</h3>
-            <div class="quiz-options">
-              <button type="button" class="quiz-option" data-value="option-a" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>iCloudManager sets it to 1 after successfully backing up that detection — so it knows what still needs uploading</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-b" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>The user manually marks detections as "reviewed" by tapping a checkbox in the history view</span>
-              </button>
-              <button type="button" class="quiz-option" data-value="option-c" onclick="selectOption(this)">
-                <div class="quiz-option-radio"></div>
-                <span>The ESP32 hardware sets it to 1 to confirm it received an acknowledgment</span>
-              </button>
+          <div class="translation-english">
+            <span class="translation-label">COLUMN GUIDE</span>
+            <div class="translation-lines">
+              <p class="tl">Table name. Only one table in the entire database.</p>
+              <p class="tl">Auto-number row ID. Starts at 1, never reused, never changes.</p>
+              <p class="tl">Camera brand string (e.g. &quot;Flock Safety&quot;). Required.</p>
+              <p class="tl">Hardware MAC address. Optional — NULL if unavailable.</p>
+              <p class="tl">Wi-Fi SSID broadcast by the camera. Optional.</p>
+              <p class="tl">Signal strength in dBm (negative integer). Required.</p>
+              <p class="tl">Identification confidence 0.0–1.0. Required.</p>
+              <p class="tl">GPS latitude (decimal degrees). Required — may be 0.0 if no GPS fix.</p>
+              <p class="tl">GPS longitude. Required — may be 0.0 if no GPS fix.</p>
+              <p class="tl">GPS altitude in meters above sea level. Optional.</p>
+              <p class="tl">GPS position accuracy radius in meters. Optional.</p>
+              <p class="tl">Speed in meters/second from GPS. Optional.</p>
+              <p class="tl">Heading 0–360° from GPS. Optional.</p>
+              <p class="tl">Accelerometer X axis. (Deprecated — always 0 in new records.)</p>
+              <p class="tl">Accelerometer Y axis. (Deprecated.)</p>
+              <p class="tl">Accelerometer Z axis. (Deprecated.)</p>
+              <p class="tl">Activity type string. (Deprecated — MotionManager removed.)</p>
+              <p class="tl">ISO-8601 timestamp string. Required.</p>
+              <p class="tl">0 = not yet backed up. 1 = iCloud backup complete.</p>
             </div>
-            <div class="quiz-feedback"></div>
           </div>
+        </div>
 
-          <button type="button" class="quiz-check-btn" onclick="checkQuiz('quiz-module4')">Check Answers</button>
-          <button type="button" class="quiz-reset-btn" onclick="resetQuiz('quiz-module4')">Try Again</button>
+        <div class="callout callout-accent animate-in">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">Four Indexes for Speed</strong>
+            <p>DatabaseManager also creates four <span class="term" data-definition="A database index is like the index at the back of a book — instead of scanning every row to find matching records, the database jumps straight to them. Indexes speed up reads but take extra disk space.">indexes</span> automatically: <code>idx_timestamp</code> (sorting by date), <code>idx_device_type</code> (filtering by camera brand), <code>idx_synced</code> (finding rows not yet backed up), and <code>idx_location</code> (geographic queries for the map). Without these, every query would scan every row.</p>
+          </div>
         </div>
       </section>
 
